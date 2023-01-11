@@ -16,5 +16,15 @@ pip3 install git+https://github.com/seerbio/wheely-mammoth.git@main
 
 Example usage:
 ```pycon
->>> # TODO
+>>> from wheely.mammoth.parsers import read_encyclopedia_features
+>>> ds = read_encyclopedia_features("data/*.features.txt")
+>>> type(ds)
+<class 'wheely.mammoth.dataset.PsmDataset'>
+>>> ds.scores.select(ds.score_columns[0]).describe().toPandas()
+  summary             primary
+0   count                1770
+1    mean  12.408585019887022
+2  stddev   3.727298477605115
+3     min           6.9876947
+4     max            43.78316
 ```
