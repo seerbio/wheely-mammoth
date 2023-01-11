@@ -87,18 +87,6 @@ def simple_psms(basic_crux_spark_df):
 
 
 @pytest.fixture
-def real_tsv():
+def real_encyclopedia_features():
     """Return a PSM table from EncyclopeDIA"""
     return Path("data/2017dec27_overlap_dia_6b_rep1_604to616.dia.features.txt")
-
-
-@pytest.fixture
-def real_spark_df(spark_session, real_tsv):
-    """Return a PSM table from EncyclopeDIA as a Spark dataframe"""
-    # Read data with Spark
-    df = spark_session.read.format("csv").load(
-        str(real_tsv), sep="\t", header=True, inferSchema=True
-    )
-
-    # Compute decoy flag as boolean
-    return df.withColumn("target", df.TD == 1)

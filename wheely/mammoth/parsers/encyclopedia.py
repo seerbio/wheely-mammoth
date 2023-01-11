@@ -4,7 +4,8 @@
 import pyspark.sql
 import pyspark.sql.functions
 
-from wheely.mammoth import PsmDataset
+from .. import PsmDataset
+from ..utils import listify
 
 
 def read_encyclopedia_features(tsv_files, spark=None):
@@ -32,7 +33,7 @@ def read_encyclopedia_features(tsv_files, spark=None):
         spark.read
         .format("csv")
         .load(
-            tsv_files,
+            [str(p) for p in listify(tsv_files)],
             sep="\t",
             header=True,
             inferSchema=True
@@ -44,7 +45,26 @@ def read_encyclopedia_features(tsv_files, spark=None):
         dataset,
         target_column="target",
         spectrum_columns=["id"],
-        score_columns=["primary"],
+        score_columns=[
+            "primary",
+            "xCorrLib",
+            "xCorrModel",
+            "LogDotProduct",
+            "logWeightedDotProduct",
+            "sumOfSquaredErrors",
+            "weightedSumOfSquaredErrors",
+            "numberOfMatchingPeaks",
+            "numberOfMatchingPeaksAboveThreshold",
+            "averageAbsFragmentDeltaMass",
+            "averageFragmentDeltaMasses",
+            "isotopeDotProduct",
+            "averageAbsParentDeltaMass",
+            "averageParentDeltaMass",
+            "eValue",
+            "deltaRT",
+            "numMissedCleavage",
+            "pepLength",
+        ],
         peptide_column="sequence",
         protein_column="protein",
         protein_delim=";",
