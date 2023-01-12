@@ -30,13 +30,12 @@ def read_encyclopedia_features(tsv_files, spark=None):
         spark = pyspark.sql.SparkSession.builder.getOrCreate()
 
     dataset = (
-        spark.read
-        .format("csv")
+        spark.read.format("csv")
         .load(
             [str(p) for p in listify(tsv_files)],
             sep="\t",
             header=True,
-            inferSchema=True
+            inferSchema=True,
         )
         .withColumn("target", pyspark.sql.functions.col("TD") == 1)
     )
@@ -71,4 +70,3 @@ def read_encyclopedia_features(tsv_files, spark=None):
     )
 
     return psms
-
