@@ -6,10 +6,10 @@ datasets for use with other tools.
 
 ## Installation  
 
-wheely-mammoth requires Python 3.8+ and can be installed with pip:  
+wheely-mammoth requires Python 3.8+ and can be installed with pip  
 
 ```shell
-pip3 install git+https://github.com/seerbio/wheely-mammoth.git@main
+pip install wheely-mammoth
 ```
 
 ## Basic Usage  
