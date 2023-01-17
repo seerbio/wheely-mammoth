@@ -5,7 +5,7 @@ try:
     from importlib.metadata import version, PackageNotFoundError
 
     try:
-        __version__ = version("cortado-ms")
+        __version__ = version("wheely-mammoth")
     except PackageNotFoundError:
         pass
 
@@ -13,7 +13,7 @@ except ImportError:
     from pkg_resources import get_distribution, DistributionNotFound
 
     try:
-        __version__ = get_distribution("cortado-ms").version
+        __version__ = get_distribution("wheely-mammoth").version
     except DistributionNotFound:
         pass
 
