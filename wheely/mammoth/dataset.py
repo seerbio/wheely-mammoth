@@ -85,6 +85,30 @@ class PsmDataset:
         # if not self._num_targets:
         #     raise ValueError("No target PSMs were detected.")
 
+    def with_data(self, data, **kwargs):
+        """
+        Return a new :py:class:`wheely.mammoth.dataset.PsmDataset` backed
+        by `data` but otherwise identical to this dataset. Optionally, any
+        arguments accepted by `PsmDataset()` can be passed as keywords and
+        will override the value from this dataset.
+        This permits mutating the data (e.g. to filter it), or altering the semantics
+        of the dataset's peptide/spectrum grouping, decoy definition, etc.
+        """
+        return PsmDataset(
+            data,
+            **dict(
+                dict(
+                    target_column=self.target_column,
+                    spectrum_columns=self.spectrum_columns,
+                    score_columns=self.score_columns,
+                    peptide_column=self.peptide_column,
+                    protein_column=self.protein_column,
+                    protein_delim=self.protein_delim,
+                ),
+                **kwargs,
+            ),
+        )
+
     @property
     def columns(self):
         """The columns of the PSM :py:class:`pyspark.sql.DataFrame`"""
