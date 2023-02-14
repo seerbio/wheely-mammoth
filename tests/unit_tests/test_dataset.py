@@ -17,6 +17,7 @@ from wheely.mammoth import PsmDataset, ConfidenceDataset
                 qvalue_column="combined p-value"  # good enough for this test
             ),
         ),
+        (ConfidenceDataset, dict(qvalue_column="combined p-value", pi0=0.95)),
     ]
 )
 def dataset_type(request):
@@ -104,3 +105,7 @@ def test_mutate(basic_crux_spark_df, dataset_type):
     assert mut.peptide_column == "sequence"
     assert mut.protein_column == "protein id"
     assert mut.protein_delim == ","
+
+    if isinstance(mut, ConfidenceDataset):
+        assert mut.qvalue_column == psms.qvalue_column
+        assert mut.pi0 == psms.pi0

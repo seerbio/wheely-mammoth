@@ -173,7 +173,16 @@ class PsmDataset:
 
 class ConfidenceDataset(PsmDataset):
     """
-    Dataset with a _q_-value column.
+    A :py:class:`wheely.mammoth.PsmDataset` with additional information about
+    statistical significance.
+
+    Parameters
+    ----------
+    qvalue_column: str
+        The name of the column giving PSM/peptide _q_-values.
+    pi0: float, optional
+        The estimated pi_0 value for the dataset. May be `None` or `numpy.nan` if no such
+        value was estimated for the dataset.
     """
 
     def __init__(
@@ -186,8 +195,10 @@ class ConfidenceDataset(PsmDataset):
         protein_column,
         protein_delim,
         qvalue_column,
+        pi0=None,
     ):
         self._qvalue_column = qvalue_column
+        self._pi0 = pi0
         super().__init__(
             psms,
             target_column,
@@ -208,7 +219,10 @@ class ConfidenceDataset(PsmDataset):
         of the dataset's peptide/spectrum grouping, decoy definition, etc.
         """
         return super().with_data(
-            data, qvalue_column=self.qvalue_column, **kwargs
+            data,
+            **kwargs,
+            qvalue_column=self.qvalue_column,
+            pi0=self.pi0,
         )
 
     @property
@@ -231,6 +245,14 @@ class ConfidenceDataset(PsmDataset):
     @property
     def qvalue_column(self):
         """
-        The name of the column givin PSM/peptide _q_-values.
+        The name of the column giving PSM/peptide _q_-values.
         """
         return self._qvalue_column
+
+    @property
+    def pi0(self):
+        """
+        The estimated pi_0 value for the dataset, or `None`/`numpy.nan` if no such value was
+        estimated.
+        """
+        return self._pi0
