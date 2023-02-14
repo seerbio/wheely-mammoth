@@ -64,17 +64,7 @@ class PsmDataset:
         self._protein_column = protein_column
         self._protein_delim = protein_delim
 
-        fields = sum(
-            [
-                self._spectrum_columns,
-                self._score_columns,
-                [self._target_column],
-                [self._peptide_column],
-                [self._protein_column],
-            ],
-            [],
-        )
-        self._data = psms.select(fields)
+        self._data = psms.select(self.columns)
 
         if self.data.isEmpty():
             raise ValueError("No PSMs were detected.")
@@ -94,7 +84,7 @@ class PsmDataset:
         This permits mutating the data (e.g. to filter it), or altering the semantics
         of the dataset's peptide/spectrum grouping, decoy definition, etc.
         """
-        return PsmDataset(
+        return type(self)(
             data,
             **dict(
                 dict(
@@ -112,7 +102,13 @@ class PsmDataset:
     @property
     def columns(self):
         """The columns of the PSM :py:class:`pyspark.sql.DataFrame`"""
-        return self._data.columns
+        return [
+            self.target_column,
+            *self.spectrum_columns,
+            *self.score_columns,
+            self.peptide_column,
+            self.protein_column,
+        ]
 
     @property
     def data(self):
@@ -173,3 +169,68 @@ class PsmDataset:
     def protein_delim(self) -> str:
         """The delimiter to split protein IDs as a string."""
         return self._protein_delim
+
+
+class ConfidenceDataset(PsmDataset):
+    """
+    Dataset with a _q_-value column.
+    """
+
+    def __init__(
+        self,
+        psms: pyspark.sql.DataFrame,
+        target_column,
+        spectrum_columns,
+        score_columns,
+        peptide_column,
+        protein_column,
+        protein_delim,
+        qvalue_column,
+    ):
+        self._qvalue_column = qvalue_column
+        super().__init__(
+            psms,
+            target_column,
+            spectrum_columns,
+            score_columns,
+            peptide_column,
+            protein_column,
+            protein_delim,
+        )
+
+    def with_data(self, data, **kwargs):
+        """
+        Return a new :py:class:`wheely.mammoth.dataset.ConfidenceDataset` backed
+        by `data` but otherwise identical to this dataset. Optionally, any
+        arguments accepted by `ConfidenceDataset()` can be passed as keywords and
+        will override the value from this dataset.
+        This permits mutating the data (e.g. to filter it), or altering the semantics
+        of the dataset's peptide/spectrum grouping, decoy definition, etc.
+        """
+        return super().with_data(
+            data, qvalue_column=self.qvalue_column, **kwargs
+        )
+
+    @property
+    def columns(self):
+        """
+        All the columns understood in this dataset.
+        """
+        return [
+            *super().columns,
+            self.qvalue_column,
+        ]
+
+    @property
+    def qvalues(self):
+        """
+        The PSM/peptide _q_-values as a :py:class:`pyspark.sql.Column`.
+        """
+        return getattr(self.data, self.qvalue_column)
+
+    @property
+    def qvalue_column(self):
+        """
+        The name of the column givin PSM/peptide _q_-values.
+        """
+        return self._qvalue_column

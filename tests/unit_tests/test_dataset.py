@@ -3,22 +3,39 @@ These are unit tests for the PSM Dataset Class:
 """
 import pandas as pd
 import pyspark.sql.functions
+import pytest
 
-from wheely.mammoth import PsmDataset
+from wheely.mammoth import PsmDataset, ConfidenceDataset
 
 
-def test_create_object(basic_crux_spark_df):
+@pytest.fixture(
+    params=[
+        (PsmDataset, dict()),
+        (
+            ConfidenceDataset,
+            dict(
+                qvalue_column="combined p-value"  # good enough for this test
+            ),
+        ),
+    ]
+)
+def dataset_type(request):
+    return request.param
+
+
+def test_create_object(basic_crux_spark_df, dataset_type):
     """Ensures that a PsmDataset object can be initialized properly."""
-    psms = PsmDataset(
+    psms = dataset_type[0](
         psms=basic_crux_spark_df,
         target_column="target",
         spectrum_columns=["file", "scan"],
-        score_columns=["combined p-value", "x"],
+        score_columns=["x"],
         peptide_column="sequence",
         protein_column="protein id",
         protein_delim=",",
+        **dataset_type[1],
     )
-    assert isinstance(psms, PsmDataset)
+    assert isinstance(psms, dataset_type[0])
 
 
 def test_properties(basic_crux_spark_df):
@@ -48,9 +65,9 @@ def test_properties(basic_crux_spark_df):
     )
 
 
-def test_mutate(basic_crux_spark_df):
+def test_mutate(basic_crux_spark_df, dataset_type):
     """Check mutating a PsmDataset object."""
-    psms = PsmDataset(
+    psms = dataset_type[0](
         psms=basic_crux_spark_df,
         target_column="target",
         spectrum_columns=["file", "scan"],
@@ -58,6 +75,7 @@ def test_mutate(basic_crux_spark_df):
         peptide_column="sequence",
         protein_column="protein id",
         protein_delim=",",
+        **dataset_type[1],
     )
 
     n_rows = 5
@@ -70,6 +88,8 @@ def test_mutate(basic_crux_spark_df):
         target_column="isDecoy",
     )
 
+    assert isinstance(mut, dataset_type[0])
+
     assert mut.data.count() == n_rows
     assert mut.target_column == "isDecoy"
     assert (
@@ -79,8 +99,8 @@ def test_mutate(basic_crux_spark_df):
         == n_rows - n_targets
     )
 
-    assert list(psms.spectra.columns) == ["file", "scan"]
-    assert list(psms.scores.columns) == ["combined p-value", "x"]
-    assert psms.peptide_column == "sequence"
-    assert psms.protein_column == "protein id"
-    assert psms.protein_delim == ","
+    assert list(mut.spectra.columns) == ["file", "scan"]
+    assert list(mut.scores.columns) == ["combined p-value", "x"]
+    assert mut.peptide_column == "sequence"
+    assert mut.protein_column == "protein id"
+    assert mut.protein_delim == ","
