@@ -50,22 +50,23 @@ class PsmDataset:
         self,
         psms: pyspark.sql.DataFrame,
         target_column,
-        spectrum_columns,
         score_columns,
+        spectrum_columns,
         peptide_column,
         protein_column,
         protein_delim,
     ):
         """Initialize a PsmDataset object."""
+        self._data = psms
+        self._target_column = target_column
         self._score_columns = listify(score_columns)
         self._spectrum_columns = listify(spectrum_columns)
-        self._target_column = target_column
         self._peptide_column = peptide_column
         self._protein_column = protein_column
         self._protein_delim = protein_delim
 
         if self.data.isEmpty():
-            raise ValueError("No PSMs were detected.")
+            raise ValueError("No PSMs were provided!")
 
         # if not self._num_decoys:
         #     raise ValueError("No decoy PSMs were detected.")
@@ -87,8 +88,8 @@ class PsmDataset:
             **dict(
                 dict(
                     target_column=self.target_column,
-                    spectrum_columns=self.spectrum_columns,
                     score_columns=self.score_columns,
+                    spectrum_columns=self.spectrum_columns,
                     peptide_column=self.peptide_column,
                     protein_column=self.protein_column,
                     protein_delim=self.protein_delim,
@@ -106,8 +107,8 @@ class PsmDataset:
         """
         return [
             self.target_column,
-            *self.spectrum_columns,
             *self.score_columns,
+            *self.spectrum_columns,
             self.peptide_column,
             self.protein_column,
         ]
@@ -116,6 +117,16 @@ class PsmDataset:
     def data(self):
         """The collection of PSMs as a :py:class:`pyspark.sql.DataFrame`."""
         return self._data
+
+    @property
+    def targets(self):
+        """The PSM target/decoy column as a :py:class:`pyspark.sql.Column`"""
+        return getattr(self.data, self.target_column)
+
+    @property
+    def scores(self):
+        """The PSM scores as a :py:class:`pyspark.sql.DataFrame`"""
+        return self.data.select(self.score_columns)
 
     @property
     def spectra(self):
@@ -133,14 +144,14 @@ class PsmDataset:
         return getattr(self.data, self.protein_column)
 
     @property
-    def scores(self):
-        """The PSM scores as a :py:class:`pyspark.sql.DataFrame`"""
-        return self.data.select(self.score_columns)
+    def target_column(self):
+        """The list of columns giving scores."""
+        return self._target_column
 
     @property
-    def targets(self):
-        """The PSM target/decoy column as a :py:class:`pyspark.sql.Column`"""
-        return getattr(self.data, self.target_column)
+    def score_columns(self):
+        """The list of columns giving scores."""
+        return self._score_columns
 
     @property
     def spectrum_columns(self):
@@ -156,16 +167,6 @@ class PsmDataset:
     def protein_column(self):
         """The name of the column giving protein information."""
         return self._protein_column
-
-    @property
-    def score_columns(self):
-        """The list of columns giving scores."""
-        return self._score_columns
-
-    @property
-    def target_column(self):
-        """The list of columns giving scores."""
-        return self._target_column
 
     @property
     def protein_delim(self) -> str:
