@@ -64,8 +64,6 @@ class PsmDataset:
         self._protein_column = protein_column
         self._protein_delim = protein_delim
 
-        self._data = psms.select(self.columns)
-
         if self.data.isEmpty():
             raise ValueError("No PSMs were detected.")
 
@@ -101,7 +99,11 @@ class PsmDataset:
 
     @property
     def columns(self):
-        """The columns of the PSM :py:class:`pyspark.sql.DataFrame`"""
+        """
+        The columns of the PSM :py:class:`pyspark.sql.DataFrame` that have defined
+        semantics in this dataset. Note that additional columns may be available
+        and will be preserved in the backing dataframe.
+        """
         return [
             self.target_column,
             *self.spectrum_columns,
