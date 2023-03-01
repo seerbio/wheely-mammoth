@@ -19,8 +19,9 @@ jobs:
         python-version: '3.x'
     - name: Install dependencies
       run: |
+        pip config unset global.index-url || true
         python -m pip install --upgrade pip
-        pip install setuptools wheel twine build
+        pip install setuptools wheel twine build 'awscli>=1.18.83'
         aws codeartifact login --tool twine --repository seer_ds --domain seer --domain-owner 718843040700 --region us-west-2
     - name: Build and publish
       run: |
