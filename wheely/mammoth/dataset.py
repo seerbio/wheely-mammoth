@@ -204,12 +204,12 @@ class ConfidenceDataset(PsmDataset):
         self._pi0 = pi0
         super().__init__(
             psms,
-            target_column,
-            spectrum_columns,
-            score_columns,
-            peptide_column,
-            protein_column,
-            protein_delim,
+            target_column=target_column,
+            score_columns=score_columns,
+            spectrum_columns=spectrum_columns,
+            peptide_column=peptide_column,
+            protein_column=protein_column,
+            protein_delim=protein_delim,
         )
 
     def with_data(self, data, **kwargs):
