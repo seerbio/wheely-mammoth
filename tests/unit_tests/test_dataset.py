@@ -24,24 +24,11 @@ def dataset_type(request):
     return request.param
 
 
-def test_create_object(basic_crux_spark_df, dataset_type):
-    """Ensures that a PsmDataset object can be initialized properly."""
-    psms = dataset_type[0](
-        psms=basic_crux_spark_df,
-        target_column="target",
-        spectrum_columns=["file", "scan"],
-        score_columns=["x"],
-        peptide_column="sequence",
-        protein_column="protein id",
-        protein_delim=",",
-        **dataset_type[1],
-    )
-    assert isinstance(psms, dataset_type[0])
-
-
-def test_properties(basic_crux_spark_df):
+def test_properties(basic_crux_spark_df, dataset_type):
     """Check the public properties of the PsmDataset object."""
-    psms = PsmDataset(
+    typ, kws = dataset_type
+
+    psms = typ(
         psms=basic_crux_spark_df,
         target_column="target",
         spectrum_columns=["file", "scan"],
@@ -49,9 +36,12 @@ def test_properties(basic_crux_spark_df):
         peptide_column="sequence",
         protein_column="protein id",
         protein_delim=",",
+        **kws,
     )
 
+    assert list(psms.spectrum_columns) == ["file", "scan"]
     assert list(psms.spectra.columns) == ["file", "scan"]
+    assert list(psms.score_columns) == ["combined p-value", "x"]
     assert list(psms.scores.columns) == ["combined p-value", "x"]
     assert psms.peptide_column == "sequence"
     assert psms.protein_column == "protein id"
