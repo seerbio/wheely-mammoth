@@ -145,7 +145,7 @@ class PsmDataset:
 
     @property
     def target_column(self):
-        """The list of columns giving scores."""
+        """The name of the column giving target/decoy information."""
         return self._target_column
 
     @property
