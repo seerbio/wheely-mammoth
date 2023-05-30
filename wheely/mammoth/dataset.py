@@ -30,9 +30,9 @@ class PsmDataset:
         indicated either in square brackets :code:`[]` or parentheses
         :code:`()`. The exact modification format within these entities does
         not matter, so long as it is consistent.
-    protein_columns : str
+    protein_columns : str (optional)
         The column that defines a unique protein.
-    protein_delim : str
+    protein_delim : str (optional)
         The string delimiter that is needed to separate multiple proteins found
         in the protein column.
 
@@ -53,8 +53,8 @@ class PsmDataset:
         score_columns,
         spectrum_columns,
         peptide_column,
-        protein_column,
-        protein_delim,
+        protein_column=None,
+        protein_delim=None,
     ):
         """Initialize a PsmDataset object."""
         self._data = psms
@@ -165,12 +165,12 @@ class PsmDataset:
 
     @property
     def protein_column(self):
-        """The name of the column giving protein information."""
+        """The name of the column giving protein information, or `None`."""
         return self._protein_column
 
     @property
     def protein_delim(self) -> str:
-        """The delimiter to split protein IDs as a string."""
+        """The delimiter to split protein IDs as a string, or `None`."""
         return self._protein_delim
 
 
