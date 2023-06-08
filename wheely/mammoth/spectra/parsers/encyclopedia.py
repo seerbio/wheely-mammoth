@@ -27,7 +27,7 @@ from ...dataset import PsmDataset as _PsmDataset
 from .. import SpectraDataset as _SpectraDataset
 
 
-def read_encyclopedia_elib(elib_location: str) -> _SpectraDataset:
+def read_encyclopedia_elib(elib_location: _os.PathLike) -> _SpectraDataset:
     """
     Read a single ELIB and return all its entries.
 
@@ -85,7 +85,9 @@ def read_encyclopedia_entries(
     raise NotImplementedError("TODO")
 
 
-def read_encyclopedia_elib_pandas(elib_location: str) -> _pd.DataFrame:
+def read_encyclopedia_elib_pandas(
+    elib_location: _os.PathLike,
+) -> _pd.DataFrame:
     """
     Read a single ELIB and return all its entries.
 
@@ -110,6 +112,9 @@ def read_encyclopedia_elib_pandas(elib_location: str) -> _pd.DataFrame:
     unrefined or lightly-refined fragment ions. For quantitative ELIBs (created while exporting
     combined quantiative reports) the semantics are unclear.
     """
+    if not isinstance(elib_location, str):
+        elib_location = elib_location.__fspath__()
+
     if elib_location.lower().startswith("dbfs:/"):
         elib_location = "/dbfs" + elib_location[5:]
 
@@ -123,6 +128,9 @@ def read_encyclopedia_elib_pandas(elib_location: str) -> _pd.DataFrame:
         # URI is already in the file: scheme, pass it directly
         elib_uri = elib_location
     else:
+        if not _os.path.exists(elib_location):
+            raise FileNotFoundError("File does not exist: " + elib_location)
+
         elib_uri = f"file:{elib_location}?mode=ro"
 
     with _sqlite_conn(elib_uri) as con:
