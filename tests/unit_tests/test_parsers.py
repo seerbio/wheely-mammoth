@@ -5,7 +5,7 @@ from wheely.mammoth.parsers import read_encyclopedia_features
 
 
 def test_read_encyclopedia_features(spark_session, real_encyclopedia_features):
-    """Test that we parse crux files correctly"""
+    """Test that we parse EncyclopeDIA files correctly"""
     psms = read_encyclopedia_features(
         real_encyclopedia_features, spark_session
     )
