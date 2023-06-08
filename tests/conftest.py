@@ -88,5 +88,11 @@ def simple_psms(basic_crux_spark_df):
 
 @pytest.fixture
 def real_encyclopedia_features():
-    """Return a PSM table from EncyclopeDIA"""
+    """Return the path of a PSM table from EncyclopeDIA"""
     return Path("data/2017dec27_overlap_dia_6b_rep1_604to616.dia.features.txt")
+
+
+@pytest.fixture
+def real_encyclopedia_elib():
+    """Return the path of an ELIB from EncyclopeDIA"""
+    return Path("data/2017dec27_overlap_dia_6b_rep1_604to616.dia.elib")

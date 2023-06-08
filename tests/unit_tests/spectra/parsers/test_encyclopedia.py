@@ -35,3 +35,12 @@ def test_get_peptide_for_psmid(psmid):
         "sequence": "DAPVGEEEAPAK",
         "charge": 2,
     }
+
+
+def test_read_elib_pandas(real_encyclopedia_elib):
+    df = read_encyclopedia_elib_pandas(real_encyclopedia_elib)
+
+    assert len(df) > 0
+
+    for col in ["PeptideModSeq", "PrecursorCharge", "MassArray"]:
+        assert col in df.columns

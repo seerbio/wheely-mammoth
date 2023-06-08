@@ -3,12 +3,17 @@
 files.
 """
 
+import os as _os
 import re as _re
+import struct as _struct
+from sqlite3 import connect as _sqlite_conn
 from typing import (
     Any as _Any,
     Dict as _Dict,
     Union as _Union,
 )
+import zlib as _zlib
+
 
 import pandas as _pd
 from pyspark.sql import (
@@ -86,7 +91,10 @@ def read_encyclopedia_elib_pandas(elib_location: str) -> _pd.DataFrame:
 
     Parameters
     ----------
-    elib_location The URI of the ELIB
+    elib_location
+        The path of the ELIB on the local filesystem, or on dbfs (if prefixed by `dbfs:/`).
+        If a URI with the file scheme is provided (starting with `file:`) it will be passed directly
+        to sqlite, otherwise a URI filename will be built to open the file in readonly mode.
 
     Returns
     -------
@@ -102,7 +110,27 @@ def read_encyclopedia_elib_pandas(elib_location: str) -> _pd.DataFrame:
     unrefined or lightly-refined fragment ions. For quantitative ELIBs (created while exporting
     combined quantiative reports) the semantics are unclear.
     """
-    raise NotImplementedError("TODO")
+    if elib_location.lower().startswith("dbfs:/"):
+        elib_location = "/dbfs" + elib_location[5:]
+
+        if not _os.path.exists(elib_location):
+            raise FileNotFoundError("File does not exist: " + elib_location)
+
+        # Open with the immutable flag to avoid locking problems with DBFS
+        elib_location = f"file:{elib_location}?immutable=1"
+
+    if elib_location.startswith("file:"):
+        # URI is already in the file: scheme, pass it directly
+        elib_uri = elib_location
+    else:
+        elib_uri = f"file:{elib_location}?mode=ro"
+
+    with _sqlite_conn(elib_uri) as con:
+        df = _pd.read_sql("SELECT * FROM entries;", con)
+
+    df["elib_location"] = elib_location
+
+    return df
 
 
 def get_peptide_for_psmid(
@@ -133,15 +161,35 @@ def get_peptide_for_psmid(
     }
 
 
-get_peptide_for_psmid_udf = _fns.udf(
-    get_peptide_for_psmid,
-    returnType=_typ.StructType(
+get_peptide_for_psmid.returnType = (
+    _typ.StructType(
         [
             _typ.StructField("sequence", _typ.StringType()),
             _typ.StructField("charge", _typ.IntegerType()),
         ]
     ),
 )
-get_peptide_for_psmid_udf.__doc__ = (
-    "UDF-decorated function:\n\n" + get_peptide_for_psmid.__doc__
-)
+
+
+def decode_double_array(comp_bytes):
+    return _decode_array("d", comp_bytes)
+
+
+decode_double_array.returnType = "array<double>"
+
+
+def decode_float_array(comp_bytes):
+    return _decode_array("f", comp_bytes)
+
+
+decode_float_array.returnType = "array<float>"
+
+
+def _decode_array(elem_fmt, comp_bytes, big_endian=True):
+    bytes = _zlib.decompress(comp_bytes)
+
+    return _struct.unpack(
+        (">" if big_endian else "<")
+        + elem_fmt * int(len(bytes) / _struct.calcsize(elem_fmt)),
+        bytes,
+    )
