@@ -48,13 +48,11 @@ def test_lists_to_peaklist(spark_session):
     print(to_lists)
 
     assert len(to_lists.columns) == 2
-    assert len(to_lists) == mock_peaklist.count()
+    assert len(to_lists) == df.count()
     assert to_lists.iloc[0, 0] == mz_values
     assert to_lists.iloc[0, 1] == intensity_values
 
-    to_pairs = result.select(
-        peaklist_to_pairs(mock_peaklist.columns[0])
-    ).toPandas()
+    to_pairs = result.select(peaklist_to_pairs(result.columns[0])).toPandas()
 
     print(to_pairs)
 
