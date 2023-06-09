@@ -23,13 +23,15 @@ from .dataset import PeaklistType as _PeaklistType
 
 
 def lists_to_peaklist(
-    mz_col: _Union[str, _Column], inten_col: _Union[str, _Column]
+    mz_col: _Union[str, _Column],
+    inten_col: _Union[str, _Column],
+    *addl,
 ) -> _Column:
     """
     Convert two array-typed columns of M/Z and intensity values into an appropriately-structured
     single "peaklist" column.
     """
-    return _arrays_zip(mz_col, inten_col)
+    return _arrays_zip(mz_col, inten_col, *addl)
 
 
 @_pandas_udf(returnType=_PeaklistType, functionType=_PandasUDFType.GROUPED_AGG)
