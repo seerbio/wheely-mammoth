@@ -54,44 +54,6 @@ def read_encyclopedia_elib(
     )
 
 
-def _wrap_elib_entries(
-    df,
-    spectrum_columns=["SourceFile", "PeptideModSeq", "PrecursorCharge"],
-    charge_column="PrecursorCharge",
-    mz_column="PrecursorMz",
-    rt_column="RTInSeconds",
-    peaklist_column=None,
-):
-    if not peaklist_column:
-        df = df.withColumn(
-            "peaklist",
-            _lists_to_peaklist(
-                _fns.udf(
-                    decode_double_array,
-                    returnType=decode_double_array.returnType,
-                )("MassArray"),
-                _fns.udf(
-                    decode_float_array,
-                    returnType=decode_float_array.returnType,
-                )("IntensityArray"),
-                _fns.udf(
-                    decode_float_array,
-                    returnType=decode_float_array.returnType,
-                )("CorrelationArray"),
-            ),
-        )
-        peaklist_column = "peaklist"
-
-    return _SpectraDataset(
-        df,
-        spectrum_columns=spectrum_columns,
-        charge_column=charge_column,
-        mz_column=mz_column,
-        rt_column=rt_column,
-        peaklist_column=peaklist_column,
-    )
-
-
 def read_encyclopedia_entries(
     psms: _PsmDataset,
     elib_loc_col: _Union[str, _Column] = None,
@@ -128,6 +90,44 @@ def read_encyclopedia_entries(
         elib_loc_col = ""  # TODO?
 
     raise NotImplementedError("TODO")
+
+
+def _wrap_elib_entries(
+    df,
+    spectrum_columns=["SourceFile", "PeptideModSeq", "PrecursorCharge"],
+    charge_column="PrecursorCharge",
+    mz_column="PrecursorMz",
+    rt_column="RTInSeconds",
+    peaklist_column=None,
+):
+    if not peaklist_column:
+        df = df.withColumn(
+            "peaklist",
+            _lists_to_peaklist(
+                _fns.udf(
+                    decode_double_array,
+                    returnType=decode_double_array.returnType,
+                )("MassArray"),
+                _fns.udf(
+                    decode_float_array,
+                    returnType=decode_float_array.returnType,
+                )("IntensityArray"),
+                _fns.udf(
+                    decode_float_array,
+                    returnType=decode_float_array.returnType,
+                )("CorrelationArray"),
+            ),
+        )
+        peaklist_column = "peaklist"
+
+    return _SpectraDataset(
+        df,
+        spectrum_columns=spectrum_columns,
+        charge_column=charge_column,
+        mz_column=mz_column,
+        rt_column=rt_column,
+        peaklist_column=peaklist_column,
+    )
 
 
 def read_encyclopedia_elib_pandas(
