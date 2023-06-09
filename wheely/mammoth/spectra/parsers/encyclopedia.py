@@ -27,7 +27,9 @@ from ...dataset import PsmDataset as _PsmDataset
 from .. import SpectraDataset as _SpectraDataset
 
 
-def read_encyclopedia_elib(elib_location: _os.PathLike) -> _SpectraDataset:
+def read_encyclopedia_elib(
+    elib_location: _os.PathLike, spark: _SparkSession = None
+) -> _SpectraDataset:
     """
     Read a single ELIB and return all its entries.
 

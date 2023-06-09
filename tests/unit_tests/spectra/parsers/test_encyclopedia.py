@@ -72,3 +72,23 @@ def test_read_elib_pandas(request, elib_location_fixture):
 
     for col in ["PeptideModSeq", "PrecursorCharge", "MassArray"]:
         assert col in df.columns
+
+
+@pytest.mark.parametrize(
+    "elib_location_fixture",
+    [
+        "real_encyclopedia_elib",  # relative
+        "real_encyclopedia_elib_abs",
+        "real_encyclopedia_elib_uri",  # relative
+        "real_encyclopedia_elib_abs_uri",
+    ],
+)
+def test_read_elib_spark(spark_session, request, elib_location_fixture):
+    elib_loc = request.getfixturevalue(elib_location_fixture)
+
+    df = read_encyclopedia_elib(elib_loc, spark=spark_session)
+
+    assert df.count() > 0
+
+    for col in ["PeptideModSeq", "PrecursorCharge", "MassArray"]:
+        assert col in df.columns
