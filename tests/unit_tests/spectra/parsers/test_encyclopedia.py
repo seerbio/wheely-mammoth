@@ -6,6 +6,8 @@ import os
 
 import pytest
 
+from pyspark.sql import functions as fns
+
 from wheely.mammoth.parsers import read_encyclopedia_features
 from wheely.mammoth.spectra.parsers.encyclopedia import *
 
@@ -97,3 +99,18 @@ def test_read_elib_spark(spark_session, request, elib_location_fixture):
         assert col in map(
             str, ds.data.columns
         ), f"Did not find annotated column {col} in DataFrame! (columns={ds.data.columns})"
+
+    # Spot-check peaklist
+
+    pkl = (
+        ds.data.select(
+            ds.peaklists, fns.size(ds.peaklists).alias("peaklist_len")
+        )
+        .limit(1)
+        .toPandas()
+    )
+
+    assert len(pkl.iloc[0, 0]) == pkl.iloc[0, 1]
+
+    for pk in pkl.iloc[0, 0]:
+        assert len(pk) >= 2, f"Not enough values for peak {pk}"

@@ -25,6 +25,7 @@ from pyspark.sql import (
 
 from ...dataset import PsmDataset as _PsmDataset
 from .. import SpectraDataset as _SpectraDataset
+from ..utils import lists_to_peaklist as _lists_to_peaklist
 
 
 def read_encyclopedia_elib(
@@ -48,13 +49,46 @@ def read_encyclopedia_elib(
     """
     df = spark.createDataFrame(read_encyclopedia_elib_pandas(elib_location))
 
+    return _wrap_elib_entries(
+        df, spectrum_columns=["SourceFile", "PeptideModSeq", "PrecursorCharge"]
+    )
+
+
+def _wrap_elib_entries(
+    df,
+    spectrum_columns=["SourceFile", "PeptideModSeq", "PrecursorCharge"],
+    charge_column="PrecursorCharge",
+    mz_column="PrecursorMz",
+    rt_column="RTInSeconds",
+    peaklist_column=None,
+):
+    if not peaklist_column:
+        df = df.withColumn(
+            "peaklist",
+            _lists_to_peaklist(
+                _fns.udf(
+                    decode_double_array,
+                    returnType=decode_double_array.returnType,
+                )("MassArray"),
+                _fns.udf(
+                    decode_float_array,
+                    returnType=decode_float_array.returnType,
+                )("IntensityArray"),
+                _fns.udf(
+                    decode_float_array,
+                    returnType=decode_float_array.returnType,
+                )("CorrelationArray"),
+            ),
+        )
+        peaklist_column = "peaklist"
+
     return _SpectraDataset(
         df,
-        spectrum_columns=["SourceFile", "PeptideModSeq", "PrecursorCharge"],
-        charge_column="PrecursorCharge",
-        mz_column="PrecursorMz",
-        rt_column="RTInSeconds",
-        peaklist_column="TODO",  # TODO
+        spectrum_columns=spectrum_columns,
+        charge_column=charge_column,
+        mz_column=mz_column,
+        rt_column=rt_column,
+        peaklist_column=peaklist_column,
     )
 
 
