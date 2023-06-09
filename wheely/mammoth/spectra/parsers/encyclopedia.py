@@ -4,7 +4,6 @@ files.
 """
 
 import os as _os
-import os.path
 import re as _re
 import struct as _struct
 from sqlite3 import connect as _sqlite_conn, OperationalError as _sqlite_err
@@ -13,7 +12,6 @@ from typing import (
     Dict as _Dict,
     Union as _Union,
 )
-from urllib.parse import urlparse as _urlparse
 import zlib as _zlib
 
 
@@ -117,22 +115,22 @@ def read_encyclopedia_elib_pandas(
     if not isinstance(elib_location, str):
         elib_location = elib_location.__fspath__()
 
-    parsed = _urlparse(elib_location)
+    if elib_location.lower().startswith("dbfs:/"):
+        elib_location = "/dbfs" + elib_location[5:]
 
-    if not parsed.scheme:
-        assert os.path.exists(
-            elib_location
-        ), f"File does not exist {elib_location}"
-        elib_uri = f"file:{elib_location}?mode=ro"
-    elif parsed.scheme.lower() == "dbfs":
-        raise NotImplementedError("TODO: dbfs support")
-    elif parsed.scheme.lower() == "file":
-        # Already a file URI, just pass it unmolested
+        if not _os.path.exists(elib_location):
+            raise FileNotFoundError("File does not exist: " + elib_location)
+
+        # Open with the immutable flag to avoid locking problems with DBFS
+        elib_uri = f"file:{elib_location}?immutable=1"
+    elif elib_location.startswith("file:"):
+        # URI is already in the file: scheme, pass it directly
         elib_uri = elib_location
     else:
-        raise ValueError(
-            f"Unsupported URI scheme `{parsed.scheme}` in {elib_location}"
-        )
+        if not _os.path.exists(elib_location):
+            raise FileNotFoundError("File does not exist: " + elib_location)
+
+        elib_uri = f"file:{elib_location}?mode=ro"
 
     try:
         con = _sqlite_conn(elib_uri, uri=True)
