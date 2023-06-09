@@ -38,6 +38,7 @@ def read_encyclopedia_features(tsv_files, spark=None):
             inferSchema=True,
         )
         .withColumn("target", pyspark.sql.functions.col("TD") == 1)
+        .withColumn("filename", pyspark.sql.functions.input_file_name())
     )
 
     psms = PsmDataset(
