@@ -84,7 +84,7 @@ def test_read_elib_spark(spark_session, elib_location):
 
     assert ds.data.count() > 0
 
-    for col in ["PeptideModSeq", "PrecursorCharge", "MassArray"]:
+    for col in ["PeptideModSeq", "PrecursorCharge", "peaklist"]:
         assert col in ds.data.columns
 
     for col in ds.columns:
@@ -119,18 +119,15 @@ def test_read_elib_entries(
     psms = psms.with_data(psms.data.filter(fns.rand(seed=0) >= 0.5).cache())
 
     ds = read_encyclopedia_entries(
-        psms, elib_loc_col=fns.lit(elib_location), spark=spark_session
+        psms, elib_loc_col=fns.lit(str(elib_location))
     )
 
-    # TODO: assumes all PSMs have entries!
-    assert ds.data.count() == psms.count()
-
-    for col in ["PeptideModSeq", "PrecursorCharge", "MassArray"]:
-        assert col in ds.data.columns
+    # Note: not all PSMs have entries
+    assert ds.data.count() <= psms.data.count()
 
     for col in ds.columns:
-        assert col in map(
-            str, ds.data.columns
+        assert (
+            col in ds.data.columns
         ), f"Did not find annotated column {col} in DataFrame! (columns={ds.data.columns})"
 
     # Spot-check peaklist

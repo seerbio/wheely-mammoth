@@ -60,7 +60,6 @@ def read_encyclopedia_entries(
     file_loc_col: _Union[str, _Column] = None,
     file_loc_patt: _Union[str, _re.Pattern] = None,
     elib_loc_fmt: str = None,
-    spark: _SparkSession = None,
 ) -> _SpectraDataset:
     """
     TODO
@@ -76,14 +75,82 @@ def read_encyclopedia_entries(
     -------
 
     """
-    if not elib_loc_col:
+    assert psms.spectrum_columns == [
+        "id"
+    ], "Unexpected spectrum_columns: " + str(psms.spectrum_columns)
+
+    # 1. Compute the ELIB path for each row
+    if elib_loc_col is None:
         elib_loc_col = compute_elib_loc(
             file_loc_col, file_loc_patt, elib_loc_fmt
         )
-    else:
+    elif not isinstance(elib_loc_col, _Column):
         elib_loc_col = _fns.col(elib_loc_col)
 
-    raise NotImplementedError("TODO")
+    # 2. Collect distinct paths
+    elib_paths = (
+        psms.data.select(elib_loc_col.alias("__elib_path"))
+        .dropDuplicates()
+        .toPandas()["__elib_path"]
+        .values
+    )
+
+    # 3. Read ELIBs with Spark
+    entries = _read_elibs_rdd_pandas(elib_paths, spark=psms.data.sparkSession)
+
+    # 4. Join to original spectrum identifiers
+    spectral_df = (
+        psms.data.select(
+            *psms.spectrum_columns,
+            elib_loc_col.alias("__elib_path"),
+            # Parse peptide information from PSMId strings (as join keys)
+            _fns.udf(
+                get_peptide_for_psmid,
+                returnType=get_peptide_for_psmid.returnType,
+            )(_fns.col("id")).alias("peptide"),
+        )
+        .alias("psm")
+        .join(
+            entries.alias("entry"),  # Take ALL columns (for now)
+            how="inner",  # NOTE: drops PSMs without entries
+            on=(
+                (
+                    _fns.col("psm.__elib_path")
+                    == _fns.col("entry.elib_location")
+                )
+                & (
+                    _fns.col("psm.peptide.sequence")
+                    == _fns.col("entry.PeptideModSeq")
+                )
+                & (
+                    _fns.col("psm.peptide.charge")
+                    == _fns.col("entry.PrecursorCharge")
+                )
+            ),
+        )
+    )
+
+    # 5. Build and return dataset object
+    return _wrap_elib_entries(
+        # Here we select only the columns we'd like to return
+        spectral_df.select(
+            *psms.spectrum_columns,
+            *[
+                _fns.col(f"entry.{c}").alias(c)
+                for c in [
+                    "PrecursorCharge",
+                    "PrecursorMz",
+                    "RTInSeconds",
+                    # Include these columns so _wrap_elib_entries parses them for us
+                    # (they will be dropped from the returned DataFrame).
+                    "MassArray",
+                    "IntensityArray",
+                    "CorrelationArray",
+                ]
+            ],
+        ),
+        spectrum_columns=psms.spectrum_columns,
+    )
 
 
 def compute_elib_loc(
@@ -149,7 +216,8 @@ def _wrap_elib_entries(
                     returnType=decode_float_array.returnType,
                 )("CorrelationArray"),
             ),
-        )
+        ).drop("MassArray", "IntensityArray", "CorrelationArray")
+
         peaklist_column = "peaklist"
 
     return _SpectraDataset(
@@ -222,6 +290,19 @@ def read_encyclopedia_elib_pandas(
     return df
 
 
+def _read_elibs_rdd_pandas(elib_paths, spark=None):
+    if not spark:
+        spark = _SparkSession.Builder.getOrCreate()
+
+    # Use the approach of https://hdfgroup.org/2015/04/putting-some-spark-into-hdf-eos/
+    files_rdd = spark.sparkContext.parallelize(elib_paths, len(elib_paths))
+    psms_rdd = files_rdd.flatMap(
+        lambda f: read_encyclopedia_elib_pandas(f).itertuples(index=False)
+    )
+
+    return spark.createDataFrame(psms_rdd)
+
+
 def get_peptide_for_psmid(
     psmid: str,
     pep_patt: _Union[str, _re.Pattern] = r":(?:decoy)?([^:]+)\+(\d+)$",
@@ -250,13 +331,11 @@ def get_peptide_for_psmid(
     }
 
 
-get_peptide_for_psmid.returnType = (
-    _typ.StructType(
-        [
-            _typ.StructField("sequence", _typ.StringType()),
-            _typ.StructField("charge", _typ.IntegerType()),
-        ]
-    ),
+get_peptide_for_psmid.returnType = _typ.StructType(
+    [
+        _typ.StructField("sequence", _typ.StringType()),
+        _typ.StructField("charge", _typ.IntegerType()),
+    ]
 )
 
 
