@@ -57,23 +57,25 @@ def read_encyclopedia_elib(
 def read_encyclopedia_entries(
     psms: _PsmDataset,
     elib_loc_col: _Union[str, _Column] = None,
+    elib_loc: _os.PathLike = None,
     file_loc_col: _Union[str, _Column] = None,
     file_loc_patt: _Union[str, _re.Pattern] = None,
     elib_loc_fmt: str = None,
 ) -> _SpectraDataset:
     """
-    TODO
+    Look up and return a table of spectral information for the given (possibly filtered) set of PSMs
 
     Parameters
     ----------
-    psms
-    elib_loc_col: If not provided, the (otherwise-ignored) `file_loc_col`, `file_loc_patt` and
-                  `elib_loc_fmt` arguments will be passed to `compute_elib_loc` to determine the
-    spark
+    elib_loc_col: If neither `elib_loc_col` or `elib_loc` are provided, the (otherwise-ignored)
+                  `file_loc_col`, `file_loc_patt` and `elib_loc_fmt` arguments will be passed to
+                  `compute_elib_loc` to determine the location of the ELIB.
 
     Returns
     -------
-
+    A dataset of matching entries from the corresponding ELIB(s), guaranteed to have matching
+    `spectrum_columns` for joining back to the original source of PSMs. Note that not all PSMs
+    will have matching entries in some cases.
     """
     assert psms.spectrum_columns == [
         "id"
@@ -81,9 +83,12 @@ def read_encyclopedia_entries(
 
     # 1. Compute the ELIB path for each row
     if elib_loc_col is None:
-        elib_loc_col = compute_elib_loc(
-            file_loc_col, file_loc_patt, elib_loc_fmt
-        )
+        if elib_loc:
+            elib_loc_col = _fns.lit(elib_loc)
+        else:
+            elib_loc_col = compute_elib_loc(
+                file_loc_col, file_loc_patt, elib_loc_fmt
+            )
     elif not isinstance(elib_loc_col, _Column):
         elib_loc_col = _fns.col(elib_loc_col)
 

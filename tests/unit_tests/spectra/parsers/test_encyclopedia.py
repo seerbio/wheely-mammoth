@@ -118,9 +118,7 @@ def test_read_elib_entries(
     # Make an arbitrary subset and cache it
     psms = psms.with_data(psms.data.filter(fns.rand(seed=0) >= 0.5).cache())
 
-    ds = read_encyclopedia_entries(
-        psms, elib_loc_col=fns.lit(str(elib_location))
-    )
+    ds = read_encyclopedia_entries(psms, elib_loc=str(elib_location))
 
     # Note: not all PSMs have entries
     assert ds.data.count() <= psms.data.count()
