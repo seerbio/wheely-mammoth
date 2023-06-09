@@ -31,12 +31,44 @@ def test_lists_to_peaklist(spark_session):
         schema=schema,
     )
 
-    result = df.select(
-        lists_to_peaklist(col("mz"), col("intensity"))
-    ).toPandas()
+    result = df.select(lists_to_peaklist(col("mz"), col("intensity")))
 
     expected_result = list(zip(mz_values, intensity_values))
-    np.testing.assert_array_equal(result.iloc[0, 0], expected_result)
+    np.testing.assert_array_equal(
+        result.toPandas().iloc[0, 0], expected_result
+    )
+
+    # Test that parsing the resulting column with other utils works
+
+    to_lists = result.select(
+        # Must spread this tuple in a select()
+        *peaklist_to_lists(result.columns[0])
+    ).toPandas()
+
+    print(to_lists)
+
+    assert len(to_lists.columns) == 2
+    assert len(to_lists) == mock_peaklist.count()
+    assert to_lists.iloc[0, 0] == mz_values
+    assert to_lists.iloc[0, 1] == intensity_values
+
+    to_pairs = result.select(
+        peaklist_to_pairs(mock_peaklist.columns[0])
+    ).toPandas()
+
+    print(to_pairs)
+
+    def _item(i):
+        return lambda l: l[i]
+
+    assert len(to_pairs.columns) == 1
+    assert len(to_pairs) == len(mz_values)
+    np.testing.assert_array_equal(
+        to_pairs.iloc[:, 0].apply(_item(0)), mz_values
+    )
+    np.testing.assert_array_equal(
+        to_pairs.iloc[:, 0].apply(_item(1)), intensity_values
+    )
 
 
 def test_rows_to_peaklist(spark_session):
