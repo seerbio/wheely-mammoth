@@ -15,7 +15,7 @@ from wheely.mammoth.spectra.parsers.encyclopedia import *
 @pytest.fixture
 def first_psmid(real_encyclopedia_features, spark_session):
     """
-    Not very useful, as the string might change and we won't know the answers!
+    Not very useful, as the string might change and then we won't know the answers!
     """
     psms = read_encyclopedia_features(
         real_encyclopedia_features, spark_session
@@ -56,19 +56,20 @@ def real_encyclopedia_elib_abs_uri(real_encyclopedia_elib_abs):
     return f"file:{real_encyclopedia_elib_abs}"
 
 
-@pytest.mark.parametrize(
-    "elib_location_fixture",
-    [
+@pytest.fixture(
+    params=[
         "real_encyclopedia_elib",  # relative
         "real_encyclopedia_elib_abs",
         "real_encyclopedia_elib_uri",  # relative
         "real_encyclopedia_elib_abs_uri",
-    ],
+    ]
 )
-def test_read_elib_pandas(request, elib_location_fixture):
-    elib_loc = request.getfixturevalue(elib_location_fixture)
+def elib_location(request):
+    return request.getfixturevalue(request.param)
 
-    df = read_encyclopedia_elib_pandas(elib_loc)
+
+def test_read_elib_pandas(elib_location):
+    df = read_encyclopedia_elib_pandas(elib_location)
 
     assert len(df) > 0
 
@@ -76,19 +77,8 @@ def test_read_elib_pandas(request, elib_location_fixture):
         assert col in df.columns
 
 
-@pytest.mark.parametrize(
-    "elib_location_fixture",
-    [
-        "real_encyclopedia_elib",  # relative
-        "real_encyclopedia_elib_abs",
-        "real_encyclopedia_elib_uri",  # relative
-        "real_encyclopedia_elib_abs_uri",
-    ],
-)
-def test_read_elib_spark(spark_session, request, elib_location_fixture):
-    elib_loc = request.getfixturevalue(elib_location_fixture)
-
-    ds = read_encyclopedia_elib(elib_loc, spark=spark_session)
+def test_read_elib_spark(spark_session, elib_location):
+    ds = read_encyclopedia_elib(elib_location, spark=spark_session)
 
     assert ds.data.count() > 0
 
