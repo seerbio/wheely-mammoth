@@ -4,6 +4,8 @@ Test EncyclopeDIA ELIB/spectrum parsing
 
 import os
 
+import numpy as np
+import pandas as pd
 import pytest
 
 from pyspark.sql import functions as fns
@@ -145,3 +147,52 @@ def test_read_elib_entries(
 
     for pk in pkl.iloc[0, 0]:
         assert len(pk) >= 2, f"Not enough values for peak {pk}"
+
+
+def test_compute_elib_loc(spark_session):
+    test_data = spark_session.createDataFrame(
+        [
+            ("/path/to/file.dia.features.txt",),
+            ("/path/to/another.dia.features.txt",),
+        ],
+        schema="file_loc string",
+    )
+
+    result = test_data.select(
+        compute_elib_loc(
+            "file_loc",
+        )
+    ).toPandas()
+
+    np.testing.assert_array_equal(
+        result.iloc[:, 0].values,
+        [
+            "/path/to/file.dia.elib",
+            "/path/to/another.dia.elib",
+        ],
+    )
+
+
+def test_compute_elib_loc_real(
+    spark_session, real_encyclopedia_features, real_encyclopedia_elib
+):
+    """
+    Test that `compute_elib_loc()` works as expected on default EncyclopeDIA feature data with
+    default arguments.
+    """
+    ds = read_encyclopedia_features(real_encyclopedia_features)
+
+    result = (
+        ds.data.limit(16)
+        .select("filename")
+        .withColumn("elib_loc", compute_elib_loc())
+        .toPandas()
+    )
+
+    # with pd.option_context("display.max_colwidth", None):
+    #     print(result)
+
+    assert all(
+        os.path.samefile(v, real_encyclopedia_elib)
+        for v in result["elib_loc"].values
+    )
