@@ -69,9 +69,6 @@ def read_encyclopedia_entries(
     ----------
     psms
     elib_loc_col
-    file_loc_col
-    file_loc_patt
-    elib_loc_fmt
     spark
 
     Returns
@@ -79,17 +76,39 @@ def read_encyclopedia_entries(
 
     """
     if elib_loc_col is None:
-        if not isinstance(file_loc_patt, _re.Pattern):
-            file_loc_patt = _re.compile(file_loc_patt)
-
-        # TODO: vectorize
-        id = file_loc_patt.search(file_loc_col).group(0)
-
-        path = elib_loc_fmt.format(id)
-
-        elib_loc_col = ""  # TODO?
+        elib_loc_col = _compute_elib_loc(
+            file_loc_col, file_loc_patt, elib_loc_fmt
+        )
 
     raise NotImplementedError("TODO")
+
+
+def _compute_elib_loc(
+    file_loc_col: _Union[str, _Column] = None,
+    file_loc_patt: _Union[str, _re.Pattern] = None,
+    elib_loc_fmt: str = None,
+) -> _Column:
+    """
+    Compute an ELIB location column using the given column and regex/pattern.
+
+    Parameters
+    ----------
+    file_loc_col: the column giving information about the file location (default: "filename")
+    file_loc_patt: A regex that parses the location value (default: r"^(.+)\.features\.txt$")
+    elib_loc_fmt: A format string that uses capture groups from the regex (default: "{1:s}.elib")
+
+    Returns
+    -------
+    A column giving the location of the corresponding ELIB for each row.
+    """
+    if not isinstance(file_loc_patt, _re.Pattern):
+        file_loc_patt = _re.compile(file_loc_patt)
+
+    # TODO: vectorize
+    id = file_loc_patt.search(file_loc_col).group(0)
+    path = elib_loc_fmt.format(id)
+
+    return elib_loc_col
 
 
 def _wrap_elib_entries(
