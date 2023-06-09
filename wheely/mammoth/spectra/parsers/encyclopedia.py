@@ -6,6 +6,7 @@ files.
 import os as _os
 import re as _re
 import struct as _struct
+import sys as _sys
 from sqlite3 import connect as _sqlite_conn, OperationalError as _sqlite_err
 from typing import (
     Any as _Any,
@@ -184,7 +185,12 @@ def compute_elib_loc(
 
     if not isinstance(file_loc_patt, _re.Pattern):
         file_loc_patt = _re.compile(
-            file_loc_patt or r"^(?:file://)?(.+)\.features\.txt$"
+            file_loc_patt
+            or (
+                r"^(?:file:///)?(.+)\.features\.txt$"
+                if _sys.platform.startswith("win")
+                else r"^(?:file://)?(.+)\.features\.txt$"
+            )
         )
 
     elib_loc_fmt = elib_loc_fmt or "{1:s}.elib"
