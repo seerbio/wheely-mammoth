@@ -117,40 +117,25 @@ def read_encyclopedia_elib_pandas(
     if not isinstance(elib_location, str):
         elib_location = elib_location.__fspath__()
 
-    # if elib_location.lower().startswith("dbfs:/"):
-    #     elib_location = "/dbfs" + elib_location[5:]
-    #
-    #     if not _os.path.exists(elib_location):
-    #         raise FileNotFoundError("File does not exist: " + elib_location)
-    #
-    #     # Open with the immutable flag to avoid locking problems with DBFS
-    #     elib_location = f"file:{elib_location}?immutable=1"
-    #
-    # if elib_location.startswith("file:"):
-    #     # URI is already in the file: scheme, pass it directly
-    #     elib_uri = elib_location
-    # else:
-    #     if not _os.path.exists(elib_location):
-    #         raise FileNotFoundError("File does not exist: " + elib_location)
-    #
-    #     elib_uri = f"file:{elib_location}?mode=ro"
+    parsed = _urlparse(elib_location)
 
-    parsed = _urlparse(elib_location, scheme="__unknown__")
-
-    if parsed.scheme == "__unknown__":
-        assert os.path.exists(elib_location), f"File does not exist {elib_location}"
-
-        elib_uri = f"file:///{elib_location}?mode=ro"
+    if not parsed.scheme:
+        assert os.path.exists(
+            elib_location
+        ), f"File does not exist {elib_location}"
+        elib_uri = f"file:{elib_location}?mode=ro"
     elif parsed.scheme.lower() == "dbfs":
         raise NotImplementedError("TODO: dbfs support")
     elif parsed.scheme.lower() == "file":
         # Already a file URI, just pass it unmolested
         elib_uri = elib_location
     else:
-        raise ValueError(f"Unsupported URI scheme `{parsed.scheme}` in {elib_location}")
+        raise ValueError(
+            f"Unsupported URI scheme `{parsed.scheme}` in {elib_location}"
+        )
 
     try:
-        con = _sqlite_conn(elib_uri)
+        con = _sqlite_conn(elib_uri, uri=True)
     except _sqlite_err as e:
         raise FileNotFoundError("Error connecting to URI " + elib_uri) from e
     else:
