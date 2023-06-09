@@ -184,7 +184,7 @@ def compute_elib_loc(
 
     if not isinstance(file_loc_patt, _re.Pattern):
         file_loc_patt = _re.compile(
-            file_loc_patt or r"^(?:file://)?(.+)\.features\.txt$"
+            file_loc_patt or r"^(?:file:///?)?(.+)\.features\.txt$"
         )
 
     elib_loc_fmt = elib_loc_fmt or "{1:s}.elib"
