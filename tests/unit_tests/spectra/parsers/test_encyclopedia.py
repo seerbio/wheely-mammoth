@@ -104,3 +104,44 @@ def test_read_elib_spark(spark_session, elib_location):
 
     for pk in pkl.iloc[0, 0]:
         assert len(pk) >= 2, f"Not enough values for peak {pk}"
+
+
+def test_read_elib_entries(
+    spark_session, real_encyclopedia_features, elib_location
+):
+    psms = read_encyclopedia_features(
+        real_encyclopedia_features, spark_session
+    )
+
+    # Make an arbitrary subset and cache it
+    psms = psms.with_data(psms.data.filter(fns.rand(seed=0) >= 0.5).cache())
+
+    ds = read_encyclopedia_entries(
+        psms, elib_loc_col=fns.lit(elib_location), spark=spark_session
+    )
+
+    # TODO: assumes all PSMs have entries!
+    assert ds.data.count() == psms.count()
+
+    for col in ["PeptideModSeq", "PrecursorCharge", "MassArray"]:
+        assert col in ds.data.columns
+
+    for col in ds.columns:
+        assert col in map(
+            str, ds.data.columns
+        ), f"Did not find annotated column {col} in DataFrame! (columns={ds.data.columns})"
+
+    # Spot-check peaklist
+
+    pkl = (
+        ds.data.select(
+            ds.peaklists, fns.size(ds.peaklists).alias("peaklist_len")
+        )
+        .limit(1)
+        .toPandas()
+    )
+
+    assert len(pkl.iloc[0, 0]) == pkl.iloc[0, 1]
+
+    for pk in pkl.iloc[0, 0]:
+        assert len(pk) >= 2, f"Not enough values for peak {pk}"
