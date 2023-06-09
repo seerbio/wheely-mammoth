@@ -46,7 +46,16 @@ def read_encyclopedia_elib(
     lightly-refined fragment ions. For quantitative ELIBs (created while exporting combined
     quantiative reports) the semantics are unclear.
     """
-    raise NotImplementedError("TODO")
+    df = spark.createDataFrame(read_encyclopedia_elib_pandas(elib_location))
+
+    return _SpectraDataset(
+        df,
+        spectrum_columns=["SourceFile", "PeptideModSeq", "PrecursorCharge"],
+        charge_column="PrecursorCharge",
+        mz_column="PrecursorMz",
+        rt_column="RTInSeconds",
+        peaklist_column="TODO",  # TODO
+    )
 
 
 def read_encyclopedia_entries(

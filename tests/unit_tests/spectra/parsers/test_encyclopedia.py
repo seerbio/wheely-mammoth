@@ -86,9 +86,14 @@ def test_read_elib_pandas(request, elib_location_fixture):
 def test_read_elib_spark(spark_session, request, elib_location_fixture):
     elib_loc = request.getfixturevalue(elib_location_fixture)
 
-    df = read_encyclopedia_elib(elib_loc, spark=spark_session)
+    ds = read_encyclopedia_elib(elib_loc, spark=spark_session)
 
-    assert df.count() > 0
+    assert ds.data.count() > 0
 
     for col in ["PeptideModSeq", "PrecursorCharge", "MassArray"]:
-        assert col in df.columns
+        assert col in ds.data.columns
+
+    for col in ds.columns:
+        assert col in map(
+            str, ds.data.columns
+        ), f"Did not find annotated column {col} in DataFrame! (columns={ds.data.columns})"
