@@ -31,14 +31,13 @@ def lists_to_peaklist(
 ) -> _Column:
     """
     Convert two array-typed columns of M/Z and intensity values into an appropriately-structured
-    single "peaklist" column.
+    single "peaklist" column. Any additional positional arguments will be zipped into the per-peak
+    arrays in order, to permit associating arbitrary extra fields with each peak.
     """
     result = _zip_with(mz_col, inten_col, lambda a, b: _array(a, b))
 
     for col in addl:
-        result = _zip_with(
-            result, col, lambda a, b: _array_append(result, col)
-        )
+        result = _zip_with(result, col, lambda a, b: _array_append(a, b))
 
     return result
 

@@ -141,7 +141,8 @@ def test_read_elib_entries(
     assert len(pkl.iloc[0, 0]) == pkl.iloc[0, 1]
 
     for pk in pkl.iloc[0, 0]:
-        assert len(pk) >= 2, f"Not enough values for peak {pk}"
+        # We expect 3 values per peak (mz, rt, corr)
+        assert len(pk) == 3, f"Wrong number of values for peak {pk}"
 
 
 def test_compute_elib_loc(spark_session):

@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import pytest
 from pyspark.sql.types import ArrayType, StructType, StructField, DoubleType
-from pyspark.sql.functions import col
+from pyspark.sql.functions import array, col, lit
 
 from wheely.mammoth.spectra import PeaklistType
 from wheely.mammoth.spectra.utils import *
@@ -34,6 +34,63 @@ def test_lists_to_peaklist(spark_session):
     result = df.select(lists_to_peaklist(col("mz"), col("intensity")))
 
     expected_result = list(zip(mz_values, intensity_values))
+    np.testing.assert_array_equal(
+        result.toPandas().iloc[0, 0], expected_result
+    )
+
+    # Test that parsing the resulting column with other utils works
+
+    to_lists = result.select(
+        # Must spread this tuple in a select()
+        *peaklist_to_lists(result.columns[0])
+    ).toPandas()
+
+    print(to_lists)
+
+    assert len(to_lists.columns) == 2
+    assert len(to_lists) == df.count()
+    assert to_lists.iloc[0, 0] == mz_values
+    assert to_lists.iloc[0, 1] == intensity_values
+
+    to_pairs = result.select(peaklist_to_pairs(result.columns[0])).toPandas()
+
+    print(to_pairs)
+
+    def _item(i):
+        return lambda l: l[i]
+
+    assert len(to_pairs.columns) == 1
+    assert len(to_pairs) == len(mz_values)
+    np.testing.assert_array_equal(
+        to_pairs.iloc[:, 0].apply(_item(0)), mz_values
+    )
+    np.testing.assert_array_equal(
+        to_pairs.iloc[:, 0].apply(_item(1)), intensity_values
+    )
+
+
+def test_lists_to_peaklist_multi(spark_session):
+    schema = StructType(
+        [
+            StructField("mz", ArrayType(DoubleType()), nullable=False),
+            StructField("intensity", ArrayType(DoubleType()), nullable=False),
+        ]
+    )
+
+    df = spark_session.createDataFrame(
+        pd.DataFrame([[mz_values, intensity_values]]),
+        schema=schema,
+    )
+
+    result = df.select(
+        lists_to_peaklist(
+            col("mz"), col("intensity"), array(*([lit(1.0)] * len(mz_values)))
+        ).alias("peaklist")
+    )
+
+    expected_result = list(
+        zip(mz_values, intensity_values, [1.0] * len(mz_values))
+    )
     np.testing.assert_array_equal(
         result.toPandas().iloc[0, 0], expected_result
     )
@@ -115,6 +172,36 @@ def test_pairs_to_peaklist(spark_session):
     print(result_df)
 
     expected_result = [(100, 0.5), (101, 0.8), (102, 0.6)]
+    np.testing.assert_array_equal(result_df.iloc[0, 0], expected_result)
+
+
+def test_tuples_to_peaklist(spark_session):
+    """
+    Test that pairs_to_peaklist handles extra peak fields.
+    """
+    schema = StructType(
+        [
+            StructField("pair", ArrayType(DoubleType()), nullable=False),
+        ]
+    )
+
+    data = pd.DataFrame(
+        [{"pair": [mz, i, 1.0]} for mz, i in zip(mz_values, intensity_values)]
+    )
+
+    print(data)
+
+    df = spark_session.createDataFrame(data, schema=schema)
+
+    # Apply the Pandas UDF
+    udf_result = df.groupby().agg(pairs_to_peaklist("pair"))
+
+    # Convert the result back to a regular Pandas DataFrame for easier comparison
+    result_df = udf_result.toPandas()
+
+    print(result_df)
+
+    expected_result = [(100, 0.5, 1.0), (101, 0.8, 1.0), (102, 0.6, 1.0)]
     np.testing.assert_array_equal(result_df.iloc[0, 0], expected_result)
 
 
