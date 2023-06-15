@@ -195,10 +195,10 @@ class ConfidenceDataset(PsmDataset):
         spectrum_columns,
         score_columns,
         peptide_column,
-        protein_column,
-        protein_delim,
         qvalue_column,
         pi0=None,
+        protein_column=None,
+        protein_delim=None,
     ):
         self._qvalue_column = qvalue_column
         self._pi0 = pi0
