@@ -56,6 +56,28 @@ def test_properties(basic_crux_spark_df, dataset_type):
     )
 
 
+def test_optional_cols(basic_crux_spark_df, dataset_type):
+    typ, kws = dataset_type
+
+    psms = typ(
+        psms=basic_crux_spark_df,
+        target_column="target",
+        spectrum_columns=["file", "scan"],
+        score_columns=["combined p-value", "x"],
+        peptide_column="sequence",
+        # Note: NOT specifying protein columns!
+        **kws,
+    )
+
+    assert set(psms.columns) == {
+        psms.target_column,
+        *psms.spectrum_columns,
+        *psms.score_columns,
+        psms.peptide_column,
+    }
+    assert all(c is not None for c in psms.columns)
+
+
 def test_mutate(basic_crux_spark_df, dataset_type):
     """Check mutating a PsmDataset object."""
     psms = dataset_type[0](
