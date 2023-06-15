@@ -55,6 +55,15 @@ def test_properties(basic_crux_spark_df, dataset_type):
         basic_crux_spark_df.toPandas().loc[:, ["target"]],
     )
 
+    assert set(psms.columns) == {
+        psms.target_column,
+        *psms.spectrum_columns,
+        *psms.score_columns,
+        psms.peptide_column,
+        psms.protein_column,
+    }
+    assert all(c is not None for c in psms.columns)
+
 
 def test_optional_cols(basic_crux_spark_df, dataset_type):
     typ, kws = dataset_type
