@@ -105,13 +105,15 @@ class PsmDataset:
         semantics in this dataset. Note that additional columns may be available
         and will be preserved in the backing dataframe.
         """
-        return [
+        cols = [
             self.target_column,
             *self.score_columns,
             *self.spectrum_columns,
             self.peptide_column,
-            self.protein_column,
         ]
+        if self.protein_column is not None:
+            cols.append(self.protein_column)
+        return cols
 
     @property
     def data(self):
