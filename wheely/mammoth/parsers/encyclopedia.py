@@ -37,8 +37,17 @@ def read_encyclopedia_features(tsv_files, spark=None):
             header=True,
             inferSchema=True,
         )
-        .withColumn("target", pyspark.sql.functions.col("TD") == 1)
         .withColumn("filename", pyspark.sql.functions.input_file_name())
+    )
+
+    # Parse target/decoy label
+    tgt_col = "TD" if "TD" in dataset.columns else "Label"
+    assert (
+        tgt_col in dataset.columns
+    ), "Did not find target/decoy label column!"
+
+    dataset = dataset.withColumn(
+        "target", pyspark.sql.functions.col("TD") == 1
     )
 
     psms = PsmDataset(
