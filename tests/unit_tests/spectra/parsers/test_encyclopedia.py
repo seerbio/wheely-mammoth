@@ -43,31 +43,21 @@ def test_get_peptide_for_psmid(psmid):
     }
 
 
-@pytest.fixture
-def real_encyclopedia_elib_abs(real_encyclopedia_elib):
-    return os.path.abspath(real_encyclopedia_elib)
-
-
-@pytest.fixture
-def real_encyclopedia_elib_uri(real_encyclopedia_elib):
-    return f"file:{real_encyclopedia_elib}"
-
-
-@pytest.fixture
-def real_encyclopedia_elib_abs_uri(real_encyclopedia_elib_abs):
-    return f"file:{real_encyclopedia_elib_abs}"
-
-
 @pytest.fixture(
     params=[
-        "real_encyclopedia_elib",  # relative
-        "real_encyclopedia_elib_abs",
-        "real_encyclopedia_elib_uri",  # relative
-        "real_encyclopedia_elib_abs_uri",
-    ]
+        ("id", lambda f: f),
+        ("abs", os.path.abspath),
+        ("uri", lambda f: f"file:{f}"),
+        ("abs_uri", lambda f: f"file:{os.path.abspath(f)}"),
+    ],
 )
-def elib_location(request):
-    return request.getfixturevalue(request.param)
+def loc_transform(request):
+    return request.param[1]
+
+
+@pytest.fixture
+def elib_location(real_encyclopedia_elib, loc_transform):
+    return loc_transform(real_encyclopedia_elib)
 
 
 def test_read_elib_pandas(elib_location):
@@ -109,16 +99,22 @@ def test_read_elib_spark(spark_session, elib_location):
 
 
 def test_read_elib_entries(
-    spark_session, real_encyclopedia_features, elib_location
+    spark_session,
+    real_encyclopedia_features,
 ):
     psms = read_encyclopedia_features(
         real_encyclopedia_features, spark_session
     )
 
     # Make an arbitrary subset and cache it
-    psms = psms.with_data(psms.data.filter(fns.rand(seed=0) >= 0.5).cache())
+    psms = psms.with_data(psms.data.sample(0.5, seed=0).cache())
 
-    ds = read_encyclopedia_entries(psms, elib_loc=str(elib_location))
+    ds = read_encyclopedia_entries(
+        psms,
+        elib_loc=str(real_encyclopedia_features).replace(
+            ".features.txt", ".elib"
+        ),
+    )
 
     # Note: not all PSMs have entries
     assert ds.data.count() <= psms.data.count()
@@ -170,7 +166,8 @@ def test_compute_elib_loc(spark_session):
 
 
 def test_compute_elib_loc_real(
-    spark_session, real_encyclopedia_features, real_encyclopedia_elib
+    spark_session,
+    real_encyclopedia_features,
 ):
     """
     Test that `compute_elib_loc()` works as expected on default EncyclopeDIA feature data with
@@ -189,6 +186,9 @@ def test_compute_elib_loc_real(
     #     print(result)
 
     assert all(
-        os.path.samefile(v, real_encyclopedia_elib)
+        os.path.samefile(
+            v,
+            str(real_encyclopedia_features).replace(".features.txt", ".elib"),
+        )
         for v in result["elib_loc"].values
     )
