@@ -102,10 +102,10 @@ def real_encyclopedia_features(request):
     )
 
 
-# TODO: Add v2 ELIB
 @pytest.fixture(
     params=[
         ("encyclopedia_v1",),
+        ("encyclopedia_v2",),
     ]
 )
 def real_encyclopedia_elib(request):
