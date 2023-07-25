@@ -47,7 +47,7 @@ def read_encyclopedia_features(tsv_files, spark=None):
     ), "Did not find target/decoy label column!"
 
     dataset = dataset.withColumn(
-        "target", pyspark.sql.functions.col("TD") == 1
+        "target", pyspark.sql.functions.col(tgt_col) == 1
     )
 
     psms = PsmDataset(
