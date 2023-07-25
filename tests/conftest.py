@@ -86,13 +86,33 @@ def simple_psms(basic_crux_spark_df):
     )
 
 
-@pytest.fixture
-def real_encyclopedia_features():
+@pytest.fixture(
+    params=[
+        ("encyclopedia_v1",),
+        ("encyclopedia_v2",),
+    ]
+)
+def real_encyclopedia_features(request):
     """Return the path of a PSM table from EncyclopeDIA"""
-    return Path("data/2017dec27_overlap_dia_6b_rep1_604to616.dia.features.txt")
+
+    (folder,) = request.param
+
+    return Path(
+        f"data/{folder}/2017dec27_overlap_dia_6b_rep1_604to616.dia.features.txt"
+    )
 
 
-@pytest.fixture
-def real_encyclopedia_elib():
+@pytest.fixture(
+    params=[
+        ("encyclopedia_v1",),
+        ("encyclopedia_v2",),
+    ]
+)
+def real_encyclopedia_elib(request):
     """Return the path of an ELIB from EncyclopeDIA"""
-    return Path("data/2017dec27_overlap_dia_6b_rep1_604to616.dia.elib")
+
+    (folder,) = request.param
+
+    return Path(
+        f"data/{folder}/2017dec27_overlap_dia_6b_rep1_604to616.dia.elib"
+    )
