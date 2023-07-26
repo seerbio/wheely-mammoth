@@ -9,6 +9,11 @@ def test_read_encyclopedia_features(spark_session, real_encyclopedia_features):
     psms = read_encyclopedia_features(
         real_encyclopedia_features, spark_session
     )
+
+    assert all(
+        c in psms.data.columns for c in psms.columns
+    ), f"Missing columns in DataFrame!: {[c for c in psms.columns if c not in psms.data.columns]}"
+
     assert isinstance(psms.data, pyspark.sql.DataFrame)
     assert (
         psms.data.count() >= 1200

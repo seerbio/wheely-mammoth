@@ -75,7 +75,9 @@ def read_encyclopedia_features(tsv_files, spark=None):
             "pepLength",
         ],
         peptide_column="sequence",
-        protein_column="protein",
+        protein_column="protein"
+        if "protein" in dataset.columns
+        else "Proteins",
         protein_delim=";",
     )
 
