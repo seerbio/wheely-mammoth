@@ -3,6 +3,7 @@
 files.
 """
 
+import logging as _logging
 import os as _os
 import re as _re
 import struct as _struct
@@ -15,7 +16,6 @@ from typing import (
 )
 import zlib as _zlib
 
-
 import pandas as _pd
 from pyspark.sql import (
     functions as _fns,
@@ -27,6 +27,8 @@ from pyspark.sql import (
 from ...dataset import PsmDataset as _PsmDataset
 from .. import SpectraDataset as _SpectraDataset
 from ..utils import lists_to_peaklist as _lists_to_peaklist
+
+_logger = _logging.getLogger(__name__)
 
 
 def read_encyclopedia_elib(
@@ -85,12 +87,16 @@ def read_encyclopedia_entries(
     # 1. Compute the ELIB path for each row
     if elib_loc_col is None:
         if elib_loc:
+            _logger.info("Will use ELIB location %s", elib_loc)
+
             elib_loc_col = _fns.lit(elib_loc)
         else:
             elib_loc_col = compute_elib_loc(
                 file_loc_col, file_loc_patt, elib_loc_fmt
             )
     elif not isinstance(elib_loc_col, _Column):
+        _logger.info("Taking ELIB locations from column: %s", elib_loc_col)
+
         elib_loc_col = _fns.col(elib_loc_col)
 
     # 2. Collect distinct paths
@@ -101,8 +107,16 @@ def read_encyclopedia_entries(
         .values
     )
 
+    _logger.info("Found %d ELIB locations", len(elib_paths))
+    _logger.debug("ELIBs: %s", ", ".join(elib_paths))
+
     # 3. Read ELIBs with Spark
     entries = _read_elibs_rdd_pandas(elib_paths, spark=psms.data.sparkSession)
+
+    if _logger.isEnabledFor(_logging.INFO):
+        _logger.info(
+            "Read %d entries from %d ELIBs", entries.count(), len(elib_paths)
+        )
 
     # 4. Join to original spectrum identifiers
     spectral_df = (
@@ -136,6 +150,11 @@ def read_encyclopedia_entries(
         )
     )
 
+    if _logger.isEnabledFor(_logging.DEBUG):
+        _logger.debug(
+            "Joined %d entries to PSM identifiers", spectral_df.count()
+        )
+
     # 5. Build and return dataset object
     return _wrap_elib_entries(
         # Here we select only the columns we'd like to return
@@ -165,7 +184,7 @@ def compute_elib_loc(
     elib_loc_fmt: str = None,
 ) -> _Column:
     """
-    Compute an ELIB location column using the given column and regex/pattern.
+    Return a column that computes the ELIB location for each PSM using the given column and regex/pattern.
 
     Parameters
     ----------
@@ -194,6 +213,12 @@ def compute_elib_loc(
         )
 
     elib_loc_fmt = elib_loc_fmt or "{1:s}.elib"
+
+    _logger.info(
+        "Will compute ELIB location from the `%s` column", file_loc_col
+    )
+    _logger.debug("file_loc_patt=%s", file_loc_patt)
+    _logger.debug("elib_loc_fmt=%s", elib_loc_fmt)
 
     def _compute_elib_loc(file_loc):
         match = file_loc_patt.search(file_loc)
@@ -266,7 +291,7 @@ def read_encyclopedia_elib_pandas(
     spectral libraries (DLIB extension) or exported chromatogram libraries this will be the set of
     library entries. For single-file ELIBs this will be the set of IDs at the FDR threshold, with
     unrefined or lightly-refined fragment ions. For quantitative ELIBs (created while exporting
-    combined quantiative reports) the semantics are unclear.
+    combined quantitative reports) the semantics are unclear.
     """
     if not isinstance(elib_location, str):
         elib_location = elib_location.__fspath__()
@@ -288,6 +313,8 @@ def read_encyclopedia_elib_pandas(
 
         elib_uri = f"file:{elib_location}?mode=ro"
 
+    _logger.info("Reading entries from %s", elib_uri)
+
     try:
         con = _sqlite_conn(elib_uri, uri=True)
     except _sqlite_err as e:
@@ -298,12 +325,18 @@ def read_encyclopedia_elib_pandas(
 
         df["elib_location"] = elib_location
 
+    _logger.info("Read %d entries from %s", len(df), elib_location)
+
     return df
 
 
 def _read_elibs_rdd_pandas(elib_paths, spark=None):
     if not spark:
         spark = _SparkSession.Builder.getOrCreate()
+
+    _logger.info(
+        "Will read entries from %d ELIBs with Pandas", len(elib_paths)
+    )
 
     # Use the approach of https://hdfgroup.org/2015/04/putting-some-spark-into-hdf-eos/
     files_rdd = spark.sparkContext.parallelize(elib_paths, len(elib_paths))
