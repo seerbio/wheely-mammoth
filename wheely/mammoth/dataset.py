@@ -65,15 +65,6 @@ class PsmDataset:
         self._protein_column = protein_column
         self._protein_delim = protein_delim
 
-        if self.data.isEmpty():
-            raise ValueError("No PSMs were provided!")
-
-        # if not self._num_decoys:
-        #     raise ValueError("No decoy PSMs were detected.")
-        #
-        # if not self._num_targets:
-        #     raise ValueError("No target PSMs were detected.")
-
     def with_data(self, data, **kwargs):
         """
         Return a new :py:class:`wheely.mammoth.dataset.PsmDataset` backed
