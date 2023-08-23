@@ -293,17 +293,20 @@ def read_encyclopedia_elib_pandas(
     unrefined or lightly-refined fragment ions. For quantitative ELIBs (created while exporting
     combined quantitative reports) the semantics are unclear.
     """
+    # Always normalize to string; this value will be included
+    # as the `elib_location` in the returned DataFrame.
     if not isinstance(elib_location, str):
         elib_location = elib_location.__fspath__()
 
+    # Now compute the URI we need to open the ELIB
     if elib_location.lower().startswith("dbfs:/"):
-        elib_location = "/dbfs" + elib_location[5:]
+        elib_to_use = "/dbfs" + elib_location[5:]
 
-        if not _os.path.exists(elib_location):
-            raise FileNotFoundError("File does not exist: " + elib_location)
+        if not _os.path.exists(elib_to_use):
+            raise FileNotFoundError("File does not exist: " + elib_to_use)
 
         # Open with the immutable flag to avoid locking problems with DBFS
-        elib_uri = f"file:{elib_location}?immutable=1"
+        elib_uri = f"file:{elib_to_use}?immutable=1"
     elif elib_location.startswith("file:"):
         # URI is already in the file: scheme, pass it directly
         elib_uri = elib_location
