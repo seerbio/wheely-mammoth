@@ -90,6 +90,7 @@ def simple_psms(basic_crux_spark_df):
     params=[
         ("encyclopedia_v1",),
         ("encyclopedia_v2",),
+        ("encyclopedia_v3",),
     ]
 )
 def real_encyclopedia_features(request):

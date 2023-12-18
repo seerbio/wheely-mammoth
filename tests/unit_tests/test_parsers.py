@@ -21,29 +21,45 @@ def test_read_encyclopedia_features(spark_session, real_encyclopedia_features):
     assert list(psms.spectrum_columns) == ["id"]
     assert all(col in psms.spectra.columns for col in psms.spectrum_columns)
 
+    # Scores we expect to be present in _all_ flavors we encounter
+    # Commented-out scores have been removed in some newer flavors.
     scores = {
         "primary",
         "xCorrLib",
         "xCorrModel",
-        "LogDotProduct",
-        "logWeightedDotProduct",
+        # "LogDotProduct",
+        "RTinMin",
+        # "logWeightedDotProduct",
         "sumOfSquaredErrors",
-        "weightedSumOfSquaredErrors",
+        # "weightedSumOfSquaredErrors",
         "numberOfMatchingPeaks",
         "numberOfMatchingPeaksAboveThreshold",
-        "averageAbsFragmentDeltaMass",
+        # "averageAbsFragmentDeltaMass",
         "averageFragmentDeltaMasses",
         "isotopeDotProduct",
-        "averageAbsParentDeltaMass",
+        # "averageAbsParentDeltaMass",
         "averageParentDeltaMass",
-        "eValue",
+        "charge1",
+        "charge2",
+        "charge3",
+        "charge4",
+        # "eValue",
         "deltaRT",
         "numMissedCleavage",
         "pepLength",
+        "precursorMass",
+        "precursorMz",
     }
-    assert set(psms.score_columns) == scores
 
-    assert psms.scores.toPandas().shape[1] == (len(scores))
+    missing_scores = [s for s in scores if s not in psms.score_columns]
+
+    assert (
+        len(missing_scores) == 0
+    ), f"Failed to find expected columns! {missing_scores}"
+
+    # assert set(psms.score_columns) == scores
+
+    assert psms.scores.toPandas().shape[1] == len(psms.score_columns)
 
     target_df = psms.data.select(psms.targets).toPandas()
 
