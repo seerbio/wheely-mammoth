@@ -29,15 +29,32 @@ def read_encyclopedia_features(tsv_files, spark=None):
     if not spark:
         spark = pyspark.sql.SparkSession.builder.getOrCreate()
 
-    dataset = (
-        spark.read.format("csv")
-        .load(
-            [str(p) for p in listify(tsv_files)],
-            sep="\t",
-            header=True,
-            inferSchema=True,
-        )
-        .withColumn("filename", pyspark.sql.functions.input_file_name())
+    dataset = spark.read.format("csv").load(
+        [str(p) for p in listify(tsv_files)],
+        sep="\t",
+        header=True,
+        inferSchema=True,
+    )
+
+    # Take all columns that aren't the first 3 (PSM info) and the last 1 (protein info)
+    score_cols = dataset.columns[3:-2]
+
+    assert all(
+        c not in score_cols
+        for c in [
+            "id",
+            "ScanNr",
+            "TD",
+            "Label",
+            "sequence",
+            "protein",
+            "Proteins",
+        ]
+    ), f"Score column selection has misbehaved! Got: {score_cols}"
+
+    # Add column giving the name of the file each PSM is read from
+    dataset = dataset.withColumn(
+        "filename", pyspark.sql.functions.input_file_name()
     )
 
     # Parse target/decoy label
@@ -54,26 +71,7 @@ def read_encyclopedia_features(tsv_files, spark=None):
         dataset,
         target_column="target",
         spectrum_columns=["id"],
-        score_columns=[
-            "primary",
-            "xCorrLib",
-            "xCorrModel",
-            "LogDotProduct",
-            "logWeightedDotProduct",
-            "sumOfSquaredErrors",
-            "weightedSumOfSquaredErrors",
-            "numberOfMatchingPeaks",
-            "numberOfMatchingPeaksAboveThreshold",
-            "averageAbsFragmentDeltaMass",
-            "averageFragmentDeltaMasses",
-            "isotopeDotProduct",
-            "averageAbsParentDeltaMass",
-            "averageParentDeltaMass",
-            "eValue",
-            "deltaRT",
-            "numMissedCleavage",
-            "pepLength",
-        ],
+        score_columns=score_cols,
         peptide_column="sequence",
         protein_column="protein"
         if "protein" in dataset.columns
