@@ -23,7 +23,7 @@ from wheely.mammoth import PsmDataset, ConfidenceDataset
             pi0=0.95,
         ),
         # Test that "quoted" column names work
-        lambda *args, **kwargs: ConfidenceDataset(
+        lambda *args, **kwargs: PsmDataset(
             *args,
             **{
                 k: [f"`{c}`" for c in v]
@@ -33,8 +33,6 @@ from wheely.mammoth import PsmDataset, ConfidenceDataset
                 else v
                 for k, v in kwargs.items()
             },
-            qvalue_column="combined p-value",  # good enough for this test
-            pi0=0.95,
         ),
     ]
 )
@@ -62,6 +60,10 @@ def test_properties(basic_crux_spark_df, dataset_type):
     # assert psms.peptide_column == "sequence"
     # assert psms.protein_column == "protein id"
     assert psms.protein_delim == ","
+
+    # assert list(psms.spectra.columns) == list(psms.spectrum_columns)
+    # assert list(psms.scores.columns) == list(psms.score_columns)
+
     pd.testing.assert_frame_equal(
         psms.scores.toPandas(),
         basic_crux_spark_df.toPandas().loc[:, ["combined p-value", "x"]],
@@ -71,6 +73,7 @@ def test_properties(basic_crux_spark_df, dataset_type):
         basic_crux_spark_df.toPandas().loc[:, ["target"]],
     )
 
+    assert all(c is not None for c in psms.columns)
     assert set(psms.columns) == {
         psms.target_column,
         *psms.spectrum_columns,
@@ -78,7 +81,6 @@ def test_properties(basic_crux_spark_df, dataset_type):
         psms.peptide_column,
         psms.protein_column,
     }
-    assert all(c is not None for c in psms.columns)
 
 
 def test_optional_cols(basic_crux_spark_df, dataset_type):

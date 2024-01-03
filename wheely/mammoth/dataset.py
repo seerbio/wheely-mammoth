@@ -114,27 +114,27 @@ class PsmDataset:
     @property
     def targets(self):
         """The PSM target/decoy column as a :py:class:`pyspark.sql.Column`"""
-        return getattr(self.data, self.target_column)
+        return pyspark.sql.functions.col(self.target_column)
 
     @property
     def scores(self):
         """The PSM scores as a :py:class:`pyspark.sql.DataFrame`"""
-        return self.data.select(self.score_columns)
+        return self.data.select(*self.score_columns)
 
     @property
     def spectra(self):
         """The mass spectrum identifiers as a :py:class:`pyspark.sql.DataFrame`."""
-        return self.data.select(self.spectrum_columns)
+        return self.data.select(*self.spectrum_columns)
 
     @property
     def peptides(self):
         """The peptides as a :py:class:`pyspark.sql.Column`."""
-        return getattr(self.data, self.peptide_column)
+        return pyspark.sql.functions.col(self.peptide_column)
 
     @property
     def proteins(self):
         """The proteins as a :py:class:`pyspark.sql.Column`."""
-        return getattr(self.data, self.protein_column)
+        return pyspark.sql.functions.col(self.protein_column)
 
     @property
     def target_column(self):
@@ -236,7 +236,7 @@ class ConfidenceDataset(PsmDataset):
         """
         The PSM/peptide _q_-values as a :py:class:`pyspark.sql.Column`.
         """
-        return getattr(self.data, self.qvalue_column)
+        return pyspark.sql.functions.col(self.qvalue_column)
 
     @property
     def qvalue_column(self):
