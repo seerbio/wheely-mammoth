@@ -1,4 +1,5 @@
 """Tests for parsing implementations"""
+
 import pyspark.sql
 
 from wheely.mammoth.parsers import read_encyclopedia_features
