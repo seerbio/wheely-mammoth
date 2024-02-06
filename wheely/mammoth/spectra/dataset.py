@@ -2,7 +2,14 @@
 `wheely.mammoth.spectra.dataset` -- interface for  spectral information
 """
 
+from typing import (
+    Iterable as _Iterable,
+    Protocol as _Protocol,
+    runtime_checkable as _runtime_checkable,
+)
+
 from pyspark.sql import (
+    Column as _Column,
     DataFrame as _DataFrame,
     types as _types,
 )
@@ -10,41 +17,17 @@ from pyspark.sql import (
 from ..utils import listify as _listify
 
 
-class SpectraDataset:
+@_runtime_checkable
+class SpectraDataset(_Protocol):
     """
     A collection of spectral information backed by a :py:class:`pyspark.sql.DataFrame`
+
+    To easily implement this protocol, extend `SpectraDatasetBase`.
 
     Future directions:
 
     * Factor out lower-level precursor information into a separate interface that can be implemented
       by subclasses of `PsmDataset`, simplifying the task of locating precursor and fragment info.
-
-    Parameters
-    ----------
-    data : pyspark.sql.DataFrame
-        A :py:class:`pyspark.sql.DataFrame` with one row per spectrum.
-    spectrum_columns : str or tuple of str
-        One or more columns that together define a unique mass spectrum.
-    charge_column : str
-        The name of a column giving the precursor charge of the spectrum.
-    mz_column : str
-        The name of a column giving the precursor m/z of the spectrum.
-    rt_column : str
-        The name of a column giving the spectrum's retention time, in an arbitrary scale.
-    peaklist_column :  str
-        The name of a column containing structured information in the following format.
-        Utilities are provided for conversion to/from other formats using Spark.
-        TODO: impl utils
-
-        The format should be a list of (m/z, intensity) pairs, as a single column. The
-        schema should be `PeaklistType`, or equivalent to:
-
-        ```python
-        ArrayType(ArrayType(DoubleType()))
-        ```
-
-        Each inner array must have at least two items (m/z, then intensity). Any items beyond the
-        first two will be ignored.
 
     Attributes
     ----------
@@ -57,6 +40,25 @@ class SpectraDataset:
     peaklists : pyspark.sql.Column
     """
 
+    data: _DataFrame
+
+    spectra: _DataFrame
+
+    charges: _Column
+    mzs: _Column
+    rts: _Column
+    peaklists: _Column
+
+    columns: _Iterable[str]
+    spectrum_columns: _Iterable[str]
+
+    charge_column: str
+    mz_column: str
+    rt_column: str
+    peaklist_column: str
+
+
+class SpectraDatasetBase(SpectraDataset):
     def __init__(
         self,
         psms: _DataFrame,
@@ -67,7 +69,31 @@ class SpectraDataset:
         peaklist_column,
     ):
         """
-        Initialize a SpectraDataset
+        Parameters
+        ----------
+        data : pyspark.sql.DataFrame
+            A :py:class:`pyspark.sql.DataFrame` with one row per spectrum.
+        spectrum_columns : str or tuple of str
+            One or more columns that together define a unique mass spectrum.
+        charge_column : str
+            The name of a column giving the precursor charge of the spectrum.
+        mz_column : str
+            The name of a column giving the precursor m/z of the spectrum.
+        rt_column : str
+            The name of a column giving the spectrum's retention time, in an arbitrary scale.
+        peaklist_column :  str
+            The name of a column containing structured information in the following format.
+            Utilities are provided for conversion to/from other formats using Spark.
+
+            The format should be a list of (m/z, intensity) pairs, as a single column. The
+            schema should be `PeaklistType`, or equivalent to:
+
+            ```python
+            ArrayType(ArrayType(DoubleType()))
+            ```
+
+            Each inner array must have at least two items (m/z, then intensity). Any items beyond the
+            first two will be ignored.
         """
         self._data = psms
         self._spectrum_columns = _listify(spectrum_columns)
