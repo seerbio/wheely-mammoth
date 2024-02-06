@@ -30,9 +30,7 @@ from wheely.mammoth import PsmDataset, ConfidenceDataset
                 k: (
                     [f"`{c}`" for c in v]
                     if "columns" in k
-                    else f"`{v}`"
-                    if "column" in k
-                    else v
+                    else f"`{v}`" if "column" in k else v
                 )
                 for k, v in kwargs.items()
             },
