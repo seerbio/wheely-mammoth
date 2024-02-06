@@ -1,6 +1,7 @@
 """
 These are unit tests for the PSM Dataset Class:
 """
+
 import pandas as pd
 import pyspark.sql.functions
 import pytest
@@ -26,11 +27,11 @@ from wheely.mammoth import PsmDataset, ConfidenceDataset
         lambda *args, **kwargs: PsmDataset(
             *args,
             **{
-                k: [f"`{c}`" for c in v]
-                if "columns" in k
-                else f"`{v}`"
-                if "column" in k
-                else v
+                k: (
+                    [f"`{c}`" for c in v]
+                    if "columns" in k
+                    else f"`{v}`" if "column" in k else v
+                )
                 for k, v in kwargs.items()
             },
         ),

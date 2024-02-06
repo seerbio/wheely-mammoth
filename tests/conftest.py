@@ -1,4 +1,5 @@
 """Fixtures that are used in multiple tests"""
+
 import logging
 from pathlib import Path
 

@@ -25,7 +25,10 @@ from pyspark.sql import (
 )
 
 from ...dataset import PsmDataset as _PsmDataset
-from .. import SpectraDataset as _SpectraDataset
+from .. import (
+    SpectraDataset as _SpectraDataset,
+    SpectraDatasetBase as _SpectraDatasetBase,
+)
 from ..utils import lists_to_peaklist as _lists_to_peaklist
 
 _logger = _logging.getLogger(__name__)
@@ -256,7 +259,7 @@ def _wrap_elib_entries(
 
         peaklist_column = "peaklist"
 
-    return _SpectraDataset(
+    return _SpectraDatasetBase(
         df,
         spectrum_columns=spectrum_columns,
         charge_column=charge_column,

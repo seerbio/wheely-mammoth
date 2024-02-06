@@ -1,6 +1,7 @@
 """
 `wheely.mammoth.parsers.encyclopedia`: read EncyclopeDIA datasets
 """
+
 import pyspark.sql
 import pyspark.sql.functions
 
@@ -73,9 +74,9 @@ def read_encyclopedia_features(tsv_files, spark=None):
         spectrum_columns=["id"],
         score_columns=score_cols,
         peptide_column="sequence",
-        protein_column="protein"
-        if "protein" in dataset.columns
-        else "Proteins",
+        protein_column=(
+            "protein" if "protein" in dataset.columns else "Proteins"
+        ),
         protein_delim=";",
     )
 
