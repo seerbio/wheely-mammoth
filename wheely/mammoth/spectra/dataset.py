@@ -227,7 +227,7 @@ class SpectraDatasetMixin:
     @property
     def peaklists(self):
         """The peaklists as a :py:class:`pyspark.sql.Column`."""
-        return getattr(self.data, self.peaklist_column)
+        return _col(self.peaklist_column)
 
     @property
     def peaklist_column(self) -> str:
