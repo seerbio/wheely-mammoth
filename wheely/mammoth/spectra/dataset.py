@@ -13,6 +13,7 @@ from pyspark.sql import (
     DataFrame as _DataFrame,
     types as _types,
 )
+from pyspark.sql.functions import col as _col
 
 from ..utils import listify as _listify
 
@@ -141,11 +142,6 @@ class PrecursorDatasetBase(PrecursorDataset):
         return getattr(self.data, self.rt_column)
 
     @property
-    def peaklists(self):
-        """The peaklists as a :py:class:`pyspark.sql.Column`."""
-        return getattr(self.data, self.peaklist_column)
-
-    @property
     def spectrum_columns(self):
         """The names of the columns giving spectrum information."""
         return self._spectrum_columns
@@ -227,7 +223,12 @@ class SpectraDatasetMixin:
         self._peaklist_column = peaklist_column
 
     @property
-    def peaklist_column(self):
+    def peaklists(self):
+        """The peaklists as a :py:class:`pyspark.sql.Column`."""
+        return getattr(self.data, self.peaklist_column)
+
+    @property
+    def peaklist_column(self) -> str:
         """The name of the column giving peaklist information."""
         return self._peaklist_column
 
