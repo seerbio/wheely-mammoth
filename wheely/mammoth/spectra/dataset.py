@@ -144,11 +144,6 @@ class PrecursorDatasetBase(PrecursorDataset):
         return _col(self.rt_column)
 
     @property
-    def peaklists(self):
-        """The peaklists as a :py:class:`pyspark.sql.Column`."""
-        return _col(self.peaklist_column)
-
-    @property
     def spectrum_columns(self):
         """The names of the columns giving spectrum information."""
         return self._spectrum_columns
@@ -230,7 +225,12 @@ class SpectraDatasetMixin:
         self._peaklist_column = peaklist_column
 
     @property
-    def peaklist_column(self):
+    def peaklists(self):
+        """The peaklists as a :py:class:`pyspark.sql.Column`."""
+        return _col(self.peaklist_column)
+
+    @property
+    def peaklist_column(self) -> str:
         """The name of the column giving peaklist information."""
         return self._peaklist_column
 
