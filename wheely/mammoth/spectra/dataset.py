@@ -13,7 +13,9 @@ from pyspark.sql import (
     DataFrame as _DataFrame,
     types as _types,
 )
-from pyspark.sql.functions import col as _col
+from pyspark.sql.functions import (
+    col as _col,
+)
 
 from ..utils import listify as _listify
 
@@ -129,17 +131,17 @@ class PrecursorDatasetBase(PrecursorDataset):
     @property
     def charges(self):
         """The charges as a :py:class:`pyspark.sql.Column`."""
-        return getattr(self.data, self.charge_column)
+        return _col(self.charge_column)
 
     @property
     def mzs(self):
         """The m/z values as a :py:class:`pyspark.sql.Column`."""
-        return getattr(self.data, self.mz_column)
+        return _col(self.mz_column)
 
     @property
     def rts(self):
         """The RTs as a :py:class:`pyspark.sql.Column`."""
-        return getattr(self.data, self.rt_column)
+        return _col(self.rt_column)
 
     @property
     def spectrum_columns(self):
