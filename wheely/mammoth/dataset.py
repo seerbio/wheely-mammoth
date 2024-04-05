@@ -31,6 +31,9 @@ class PsmDataset:
         indicated either in square brackets :code:`[]` or parentheses
         :code:`()`. The exact modification format within these entities does
         not matter, so long as it is consistent.
+    charge_column: str (optional)
+        The column that specifies the PSM's precursor charge state. If `None`
+        it's assumed that the dataset does not have charge state information.
     protein_columns : str (optional)
         The column that defines a unique protein.
     protein_delim : str (optional)
@@ -54,6 +57,8 @@ class PsmDataset:
         score_columns,
         spectrum_columns,
         peptide_column,
+        *_args,
+        charge_column=None,
         protein_column=None,
         protein_delim=None,
     ):
@@ -63,6 +68,7 @@ class PsmDataset:
         self._score_columns = listify(score_columns)
         self._spectrum_columns = listify(spectrum_columns)
         self._peptide_column = peptide_column
+        self._charge_column = charge_column
         self._protein_column = protein_column
         self._protein_delim = protein_delim
 
@@ -83,6 +89,7 @@ class PsmDataset:
                     score_columns=self.score_columns,
                     spectrum_columns=self.spectrum_columns,
                     peptide_column=self.peptide_column,
+                    charge_column=self.charge_column,
                     protein_column=self.protein_column,
                     protein_delim=self.protein_delim,
                 ),
@@ -133,6 +140,15 @@ class PsmDataset:
         return pyspark.sql.functions.col(self.peptide_column)
 
     @property
+    def charges(self):
+        """The charges as a :py:class:`pyspark.sql.Column`, or `None`"""
+        return (
+            pyspark.sql.functions.col(self.charge_column)
+            if self.charge_column
+            else None
+        )
+
+    @property
     def proteins(self):
         """The proteins as a :py:class:`pyspark.sql.Column`."""
         return pyspark.sql.functions.col(self.protein_column)
@@ -156,6 +172,11 @@ class PsmDataset:
     def peptide_column(self):
         """The name of the column giving peptide information."""
         return self._peptide_column
+
+    @property
+    def charge_column(self):
+        """The name of the column giving charge information, or `None`"""
+        return self._charge_column
 
     @property
     def protein_column(self):
@@ -190,6 +211,8 @@ class ConfidenceDataset(PsmDataset):
         score_columns,
         peptide_column,
         qvalue_column,
+        *_args,
+        charge_column=None,
         pi0=None,
         protein_column=None,
         protein_delim=None,
@@ -202,6 +225,7 @@ class ConfidenceDataset(PsmDataset):
             score_columns=score_columns,
             spectrum_columns=spectrum_columns,
             peptide_column=peptide_column,
+            charge_column=charge_column,
             protein_column=protein_column,
             protein_delim=protein_delim,
         )
@@ -217,9 +241,13 @@ class ConfidenceDataset(PsmDataset):
         """
         return super().with_data(
             data,
-            **kwargs,
-            qvalue_column=self.qvalue_column,
-            pi0=self.pi0,
+            **dict(
+                dict(
+                    qvalue_column=self.qvalue_column,
+                    pi0=self.pi0,
+                ),
+                **kwargs,
+            ),
         )
 
     @property
