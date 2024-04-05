@@ -9,7 +9,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: [self-hosted, aws-master]
+    runs-on: [self-hosted, aws-master, X64]
 
     steps:
     - uses: actions/checkout@v2
