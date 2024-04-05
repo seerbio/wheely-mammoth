@@ -1,5 +1,6 @@
 """Tests for parsing implementations"""
 
+import numpy as np
 import pyspark.sql
 
 from wheely.mammoth.parsers import read_encyclopedia_features
@@ -74,3 +75,13 @@ def test_read_encyclopedia_features(spark_session, real_encyclopedia_features):
     assert (
         ~target_df[target_df.columns[0]]
     ).sum() >= 600  # some generic floor
+
+    chg_df = psms.data.select(
+        psms.charges, *[f"charge{z}" for z in range(1, 5)]
+    ).toPandas()
+    for z in range(1, 5):
+        np.testing.assert_array_equal(
+            chg_df["charge"] == z,
+            chg_df[f"charge{z}"].astype(bool),
+            f"Mismatch z={z}",
+        )

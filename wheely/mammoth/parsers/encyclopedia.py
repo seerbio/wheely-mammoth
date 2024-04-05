@@ -70,7 +70,7 @@ def read_encyclopedia_features(tsv_files, spark=None):
             "target": pyspark.sql.functions.col(tgt_col) == 1,
             charge_col: pyspark.sql.functions.regexp_extract(
                 "id", r"\+(\d+)$", 1
-            ),
+            ).astype("int"),
         }
     )
     if (
