@@ -22,6 +22,11 @@ def test_read_encyclopedia_features(spark_session, real_encyclopedia_features):
     assert list(psms.spectrum_columns) == ["id"]
     assert all(col in psms.spectra.columns for col in psms.spectrum_columns)
 
+    assert hasattr(psms, "charges")
+    assert psms.charges is not None
+    assert hasattr(psms, "charge_column")
+    assert psms.charge_column is not None
+
     # Scores we expect to be present in _all_ flavors we encounter
     # Commented-out scores have been removed in some newer flavors.
     scores = {

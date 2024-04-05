@@ -64,9 +64,23 @@ def read_encyclopedia_features(tsv_files, spark=None):
         tgt_col in dataset.columns
     ), "Did not find target/decoy label column!"
 
-    dataset = dataset.withColumn(
-        "target", pyspark.sql.functions.col(tgt_col) == 1
+    charge_col = "charge"
+    dataset = dataset.withColumns(
+        {
+            "target": pyspark.sql.functions.col(tgt_col) == 1,
+            charge_col: pyspark.sql.functions.regexp_extract(
+                "id", r"\+(\d+)$", 1
+            ),
+        }
     )
+    if (
+        dataset.filter(
+            pyspark.sql.functions.col(charge_col).isNotNull()
+        ).count()
+        == 0
+    ):
+        dataset = dataset.drop(charge_col)
+        charge_col = None
 
     psms = PsmDataset(
         dataset,
@@ -74,6 +88,7 @@ def read_encyclopedia_features(tsv_files, spark=None):
         spectrum_columns=["id"],
         score_columns=score_cols,
         peptide_column="sequence",
+        charge_column=charge_col,
         protein_column=(
             "protein" if "protein" in dataset.columns else "Proteins"
         ),
