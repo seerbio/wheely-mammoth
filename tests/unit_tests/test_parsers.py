@@ -1,5 +1,6 @@
 """Tests for parsing implementations"""
 
+import numpy as np
 import pyspark.sql
 
 from wheely.mammoth.parsers import read_encyclopedia_features
@@ -21,6 +22,11 @@ def test_read_encyclopedia_features(spark_session, real_encyclopedia_features):
     )  # something generic that we should hit in all versions
     assert list(psms.spectrum_columns) == ["id"]
     assert all(col in psms.spectra.columns for col in psms.spectrum_columns)
+
+    assert hasattr(psms, "charges")
+    assert psms.charges is not None
+    assert hasattr(psms, "charge_column")
+    assert psms.charge_column is not None
 
     # Scores we expect to be present in _all_ flavors we encounter
     # Commented-out scores have been removed in some newer flavors.
@@ -69,3 +75,13 @@ def test_read_encyclopedia_features(spark_session, real_encyclopedia_features):
     assert (
         ~target_df[target_df.columns[0]]
     ).sum() >= 600  # some generic floor
+
+    chg_df = psms.data.select(
+        psms.charges, *[f"charge{z}" for z in range(1, 5)]
+    ).toPandas()
+    for z in range(1, 5):
+        np.testing.assert_array_equal(
+            chg_df["charge"] == z,
+            chg_df[f"charge{z}"].astype(bool),
+            f"Mismatch z={z}",
+        )
