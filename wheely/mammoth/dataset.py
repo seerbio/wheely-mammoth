@@ -110,6 +110,8 @@ class PsmDataset:
             *self.spectrum_columns,
             self.peptide_column,
         ]
+        if self.charge_column is not None:
+            cols.append(self.charge_column)
         if self.protein_column is not None:
             cols.append(self.protein_column)
         return cols

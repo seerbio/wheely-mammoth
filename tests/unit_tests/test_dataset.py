@@ -80,6 +80,7 @@ def test_properties(basic_crux_spark_df, dataset_type):
         *psms.spectrum_columns,
         *psms.score_columns,
         psms.peptide_column,
+        *[c for c in [psms.charge_column] if c],
         psms.protein_column,
     }
 
@@ -99,6 +100,7 @@ def test_optional_cols(basic_crux_spark_df, dataset_type):
         *psms.spectrum_columns,
         *psms.score_columns,
         psms.peptide_column,
+        *[c for c in [psms.charge_column] if c],
     }
     assert all(c is not None for c in psms.columns)
 

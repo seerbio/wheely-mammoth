@@ -28,6 +28,16 @@ def test_read_encyclopedia_features(spark_session, real_encyclopedia_features):
     assert hasattr(psms, "charge_column")
     assert psms.charge_column is not None
 
+    assert all(c is not None for c in psms.columns)
+    assert set(psms.columns) == {
+        psms.target_column,
+        *psms.spectrum_columns,
+        *psms.score_columns,
+        psms.peptide_column,
+        *[c for c in [psms.charge_column] if c],
+        psms.protein_column,
+    }
+
     # Scores we expect to be present in _all_ flavors we encounter
     # Commented-out scores have been removed in some newer flavors.
     scores = {
