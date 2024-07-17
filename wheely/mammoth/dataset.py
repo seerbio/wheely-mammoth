@@ -4,7 +4,20 @@ peptide-spectrum matches.
 
 import logging
 
+from typing import (
+    Iterable as _Iterable,
+    Protocol as _Protocol,
+    runtime_checkable as _runtime_checkable,
+)
+
 import pyspark.sql
+from pyspark.sql import (
+    Column as _Column,
+    DataFrame as _DataFrame,
+)
+from pyspark.sql.functions import (
+    col as _col,
+)
 
 from .utils import listify
 
@@ -283,3 +296,90 @@ class ConfidenceDataset(PsmDataset):
         estimated.
         """
         return self._pi0
+
+
+@_runtime_checkable
+class IntensityDataset(_Protocol):
+    """
+    Attributes
+    ----------
+    columns : list of str
+    data : pyspark.sql.DataFrame
+    intensities : pyspark.sql.DataFrame
+    intensity_column: str
+    """
+
+    data: _DataFrame
+
+    intensities: _Column
+
+    columns: _Iterable[str]
+
+    intensity_column: str
+
+
+class IntensityDatasetMixin:
+    def __init__(
+        self,
+        intensity_column,
+    ):
+        """
+        Parameters
+        ----------
+        intensity_column :  str
+            The name of a column containing intensity values.
+        """
+        self._intensity_column = intensity_column
+
+    @property
+    def intensities(self):
+        """The intensities as a :py:class:`pyspark.sql.Column`."""
+        return _col(self.intensity_column)
+
+    @property
+    def intensity_column(self) -> str:
+        """The name of the column containing intensities."""
+        return self._intensity_column
+
+
+class PsmIntensityDataset(IntensityDatasetMixin, PsmDataset):
+    def __init__(
+        self,
+        psms: pyspark.sql.DataFrame,
+        target_column,
+        score_columns,
+        spectrum_columns,
+        peptide_column,
+        intensity_column: str,
+        *_args,
+        charge_column=None,
+        protein_column=None,
+        protein_delim=None,
+    ):
+        self._data = psms
+        PsmDataset.__init__(
+            self,
+            target_column=target_column,
+            score_columns=score_columns,
+            spectrum_columns=spectrum_columns,
+            peptide_column=peptide_column,
+            charge_column=charge_column,
+            protein_column=protein_column,
+            protein_delim=protein_delim,
+        )
+        IntensityDatasetMixin.__init__(self, intensity_column)
+
+    @property
+    def data(self):
+        return self._data
+
+    @property
+    def columns(self):
+        """
+        The columns of the :py:class:`pyspark.sql.DataFrame` that have defined
+        semantics in this dataset. Note that additional columns may be available
+        and will be preserved in the backing dataframe.
+        """
+        return [
+            self.intensity_column,
+        ]
