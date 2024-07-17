@@ -356,9 +356,9 @@ class PsmIntensityDataset(IntensityDatasetMixin, PsmDataset):
         protein_column=None,
         protein_delim=None,
     ):
-        self._data = psms
         PsmDataset.__init__(
             self,
+            psms=psms,
             target_column=target_column,
             score_columns=score_columns,
             spectrum_columns=spectrum_columns,
@@ -370,10 +370,6 @@ class PsmIntensityDataset(IntensityDatasetMixin, PsmDataset):
         IntensityDatasetMixin.__init__(self, intensity_column)
 
     @property
-    def data(self):
-        return self._data
-
-    @property
     def columns(self):
         """
         The columns of the :py:class:`pyspark.sql.DataFrame` that have defined
@@ -381,5 +377,17 @@ class PsmIntensityDataset(IntensityDatasetMixin, PsmDataset):
         and will be preserved in the backing dataframe.
         """
         return [
+            *super().columns,
             self.intensity_column,
         ]
+
+    def with_data(self, data, **kwargs):
+        return super().with_data(
+            data,
+            **dict(
+                dict(
+                    intensity_column=self.intensity_column,
+                ),
+                **kwargs,
+            ),
+        )
