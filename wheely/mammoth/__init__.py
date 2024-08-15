@@ -6,4 +6,9 @@ Exports:
 - `PsmDataset`
 """
 
-from .dataset import PsmDataset, ConfidenceDataset
+from .dataset import (
+    PsmDataset,
+    ConfidenceDataset,
+    IntensityDataset,
+    PsmIntensityDataset,
+)
