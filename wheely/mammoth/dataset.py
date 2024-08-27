@@ -213,6 +213,8 @@ class ConfidenceDataset(PsmDataset):
     ----------
     qvalue_column: str
         The name of the column giving PSM/peptide _q_-values.
+    errprob_column: str, optional
+        The name of the column giving posterior error probabilities (PEPs), or `None` if no such column is present.
     pi0: float, optional
         The estimated pi_0 value for the dataset. May be `None` or `numpy.nan` if no such
         value was estimated for the dataset.
@@ -231,8 +233,10 @@ class ConfidenceDataset(PsmDataset):
         pi0=None,
         protein_column=None,
         protein_delim=None,
+        errprob_column=None,
     ):
         self._qvalue_column = qvalue_column
+        self._errprob_column = errprob_column
         self._pi0 = pi0
         super().__init__(
             psms,
@@ -273,6 +277,7 @@ class ConfidenceDataset(PsmDataset):
         return [
             *super().columns,
             self.qvalue_column,
+            *[c for c in [self.errprob_column] if c is not None],
         ]
 
     @property
@@ -283,11 +288,25 @@ class ConfidenceDataset(PsmDataset):
         return pyspark.sql.functions.col(self.qvalue_column)
 
     @property
+    def errprobs(self):
+        """
+        The PSM/peptide posterior error probabilities (PEPs) as a :py:class:`pyspark.sql.Column`.
+        """
+        return pyspark.sql.functions.col(self.errprob_column)
+
+    @property
     def qvalue_column(self):
         """
         The name of the column giving PSM/peptide _q_-values.
         """
         return self._qvalue_column
+
+    @property
+    def errprob_column(self):
+        """
+        The name of the column giving PSM/peptide posterior error probabilities (PEPs).
+        """
+        return self._errprob_column
 
     @property
     def pi0(self):
