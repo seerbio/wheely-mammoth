@@ -277,7 +277,7 @@ class ConfidenceDataset(PsmDataset):
         return [
             *super().columns,
             self.qvalue_column,
-            *[c for c in [self.pep_column] if c is not None],
+            *[c for c in [self.errprob_column] if c is not None],
         ]
 
     @property
