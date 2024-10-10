@@ -263,6 +263,7 @@ class ConfidenceDataset(PsmDataset):
             **dict(
                 dict(
                     qvalue_column=self.qvalue_column,
+                    errprob_column=self.errprob_column,
                     pi0=self.pi0,
                 ),
                 **kwargs,

@@ -24,6 +24,13 @@ from wheely.mammoth import *
             qvalue_column="q-value",  # good enough for this test
             pi0=0.95,
         ),
+        lambda *args, **kwargs: ConfidenceDataset(
+            *args,
+            **kwargs,
+            qvalue_column="q-value",  # good enough for this test
+            errprob_column="errprob",  # good enough for this test
+            pi0=0.95,
+        ),
         # Test that "quoted" column names work
         lambda *args, **kwargs: PsmDataset(
             *args,
@@ -88,7 +95,12 @@ def test_properties(basic_crux_spark_df, dataset_type):
         psms.peptide_column,
         *[c for c in [psms.charge_column] if c],
         psms.protein_column,
-        *[d.qvalue_column for d in [psms] if isinstance(d, ConfidenceDataset)],
+        *[
+            c
+            for a in ["qvalue_column", "errprob_column"]
+            if isinstance(psms, ConfidenceDataset)
+            and (c := getattr(psms, a)) is not None
+        ],
         *[
             d.intensity_column
             for d in [psms]
@@ -113,7 +125,12 @@ def test_optional_cols(basic_crux_spark_df, dataset_type):
         *psms.score_columns,
         psms.peptide_column,
         *[c for c in [psms.charge_column] if c],
-        *[d.qvalue_column for d in [psms] if isinstance(d, ConfidenceDataset)],
+        *[
+            c
+            for a in ["qvalue_column", "errprob_column"]
+            if isinstance(psms, ConfidenceDataset)
+            and (c := getattr(psms, a)) is not None
+        ],
         *[
             d.intensity_column
             for d in [psms]
@@ -164,6 +181,7 @@ def test_mutate(basic_crux_spark_df, dataset_type):
 
     if isinstance(mut, ConfidenceDataset):
         assert mut.qvalue_column == psms.qvalue_column
+        assert mut.errprob_column == psms.errprob_column
         assert mut.pi0 == psms.pi0
 
     if isinstance(mut, PsmIntensityDataset):
