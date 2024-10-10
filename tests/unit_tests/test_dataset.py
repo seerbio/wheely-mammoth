@@ -95,7 +95,12 @@ def test_properties(basic_crux_spark_df, dataset_type):
         psms.peptide_column,
         *[c for c in [psms.charge_column] if c],
         psms.protein_column,
-        *[d.qvalue_column for d in [psms] if isinstance(d, ConfidenceDataset)],
+        *[
+            c
+            for a in ["qvalue_column", "errprob_column"]
+            if isinstance(psms, ConfidenceDataset)
+            and (c := getattr(psms, a)) is not None
+        ],
         *[
             d.intensity_column
             for d in [psms]
@@ -120,7 +125,12 @@ def test_optional_cols(basic_crux_spark_df, dataset_type):
         *psms.score_columns,
         psms.peptide_column,
         *[c for c in [psms.charge_column] if c],
-        *[d.qvalue_column for d in [psms] if isinstance(d, ConfidenceDataset)],
+        *[
+            c
+            for a in ["qvalue_column", "errprob_column"]
+            if isinstance(psms, ConfidenceDataset)
+            and (c := getattr(psms, a)) is not None
+        ],
         *[
             d.intensity_column
             for d in [psms]
