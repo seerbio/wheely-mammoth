@@ -24,6 +24,13 @@ from wheely.mammoth import *
             qvalue_column="q-value",  # good enough for this test
             pi0=0.95,
         ),
+        lambda *args, **kwargs: ConfidenceDataset(
+            *args,
+            **kwargs,
+            qvalue_column="q-value",  # good enough for this test
+            errprob_column="errprob",  # good enough for this test
+            pi0=0.95,
+        ),
         # Test that "quoted" column names work
         lambda *args, **kwargs: PsmDataset(
             *args,
@@ -164,6 +171,7 @@ def test_mutate(basic_crux_spark_df, dataset_type):
 
     if isinstance(mut, ConfidenceDataset):
         assert mut.qvalue_column == psms.qvalue_column
+        assert mut.errprob_column == psms.errprob_column
         assert mut.pi0 == psms.pi0
 
     if isinstance(mut, PsmIntensityDataset):
