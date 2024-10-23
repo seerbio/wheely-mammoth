@@ -87,6 +87,23 @@ def test_properties(basic_crux_spark_df, dataset_type):
         basic_crux_spark_df.toPandas().loc[:, ["target"]],
     )
 
+    # Check that optional columns' properties are correctly handled
+    for ca, a in {
+        "charge_column": "charges",
+        "qvalue_column": "qvalues",
+        "errprob_column": "errprobs",
+        "intensity_column": "intensities",
+    }.items():
+        if not hasattr(psms, ca):
+            continue
+
+        try:
+            assert hasattr(psms, a), f"Had {ca} but no {a}!"
+
+            assert (getattr(psms, ca) is None) == (getattr(psms, a) is None)
+        except Exception as e:
+            raise AssertionError(f"Error testing {ca}/{a}") from e
+
     assert all(c is not None for c in psms.columns)
     assert set(psms.columns) == {
         psms.target_column,

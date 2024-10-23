@@ -293,7 +293,11 @@ class ConfidenceDataset(PsmDataset):
         """
         The PSM/peptide posterior error probabilities (PEPs) as a :py:class:`pyspark.sql.Column`.
         """
-        return pyspark.sql.functions.col(self.errprob_column)
+        return (
+            pyspark.sql.functions.col(self.errprob_column)
+            if self.errprob_column
+            else None
+        )
 
     @property
     def qvalue_column(self):
