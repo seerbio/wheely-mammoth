@@ -136,3 +136,114 @@ class ProteinDataset:
     def protein_delim(self) -> str:
         """The delimiter to split protein IDs as a string, or `None`."""
         return self._protein_delim
+
+
+class ProteinConfidenceDataset(ProteinDataset):
+    """
+    A :py:class:`wheely.mammoth.ProteinDataset` with additional information about
+    statistical significance.
+
+    Parameters
+    ----------
+    qvalue_column: str
+        The name of the column giving protein _q_-values.
+    errprob_column: str, optional
+        The name of the column giving posterior error probabilities (PEPs), or `None` if no such column is present.
+    pi0: float, optional
+        The estimated pi_0 value for the dataset. May be `None` or `numpy.nan` if no such
+        value was estimated for the dataset.
+    """
+
+    def __init__(
+        self,
+        data: pyspark.sql.DataFrame,
+        protein_column,
+        target_column,
+        score_columns,
+        qvalue_column,
+        errprob_column=None,
+        protein_delim=None,
+        pi0=None,
+    ):
+        self._qvalue_column = qvalue_column
+        self._errprob_column = errprob_column
+        self._pi0 = pi0
+        super().__init__(
+            data,
+            protein_column=protein_column,
+            target_column=target_column,
+            score_columns=score_columns,
+            protein_delim=protein_delim,
+        )
+
+    def with_data(self, data, **kwargs):
+        """
+        Return a new :py:class:`wheely.mammoth.dataset.ProteinConfidenceDataset` backed
+        by `data` but otherwise identical to this dataset. Optionally, any
+        arguments accepted by `ConfidenceDataset()` can be passed as keywords and
+        will override the value from this dataset.
+        This permits mutating the data (e.g. to filter it), or altering the semantics
+        of the dataset's peptide/spectrum grouping, decoy definition, etc.
+        """
+        return super().with_data(
+            data,
+            **dict(
+                dict(
+                    qvalue_column=self.qvalue_column,
+                    errprob_column=self.errprob_column,
+                    pi0=self.pi0,
+                ),
+                **kwargs,
+            ),
+        )
+
+    @property
+    def columns(self):
+        """
+        All the columns understood in this dataset.
+        """
+        return [
+            *super().columns,
+            self.qvalue_column,
+            *[c for c in [self.errprob_column] if c is not None],
+        ]
+
+    @property
+    def qvalues(self):
+        """
+        The PSM/peptide _q_-values as a :py:class:`pyspark.sql.Column`.
+        """
+        return pyspark.sql.functions.col(self.qvalue_column)
+
+    @property
+    def errprobs(self):
+        """
+        The PSM/peptide posterior error probabilities (PEPs) as a :py:class:`pyspark.sql.Column`.
+        """
+        return (
+            pyspark.sql.functions.col(self.errprob_column)
+            if self.errprob_column
+            else None
+        )
+
+    @property
+    def qvalue_column(self):
+        """
+        The name of the column giving PSM/peptide _q_-values.
+        """
+        return self._qvalue_column
+
+    @property
+    def errprob_column(self):
+        """
+        The name of the column giving PSM/peptide posterior error probabilities (PEPs).
+        """
+        return self._errprob_column
+
+    @property
+    def pi0(self):
+        """
+        The estimated pi_0 value for the dataset, or `None`/`numpy.nan` if no such value was
+        estimated.
+        """
+        return self._pi0

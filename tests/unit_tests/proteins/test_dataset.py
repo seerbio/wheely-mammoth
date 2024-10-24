@@ -24,6 +24,24 @@ from wheely.mammoth.proteins import *
                 for k, v in kwargs.items()
             },
         ),
+        lambda *args, **kwargs: ProteinConfidenceDataset(
+            *args,
+            **kwargs,
+            qvalue_column="q-value",  # good enough for this test
+        ),
+        lambda *args, **kwargs: ProteinConfidenceDataset(
+            *args,
+            **kwargs,
+            qvalue_column="q-value",  # good enough for this test
+            pi0=0.95,
+        ),
+        lambda *args, **kwargs: ProteinConfidenceDataset(
+            *args,
+            **kwargs,
+            qvalue_column="q-value",  # good enough for this test
+            errprob_column="errprob",  # good enough for this test
+            pi0=0.95,
+        ),
     ]
 )
 def dataset_type(request):
@@ -61,6 +79,11 @@ def test_properties(basic_protein_df, dataset_type):
         dset.protein_column,
         dset.target_column,
         *dset.score_columns,
+        *(
+            c
+            for a in ["qvalue_column", "errprob_column"]
+            if (c := getattr(dset, a, None)) is not None
+        ),
     }
 
 
