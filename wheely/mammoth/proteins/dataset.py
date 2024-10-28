@@ -22,8 +22,10 @@ class ProteinDataset:
     data : pyspark.sql.DataFrame
         A :py:class:`pyspark.sql.DataFrame` of proteins.
     protein_column : str
-        The column that defines a unique protein. May specify a string- or list-valued column.
-        When it contains multiple identifiers, ensure you specify a protein_delim or a list-valued column!
+        The column that defines a unique protein. In typical use, this should be the set of protein accessions within
+        a group; these may be shared between groups when using a grouping that does not exclusively assign proteins to
+        groups. You may specify a string- or list-valued column. When it contains multiple identifiers, ensure you
+        specify a protein_delim or use a list-valued column.
     target_column : str
         The column that indicates whether a PSM is a target or a decoy. This
         column should be boolean, where :code:`True` indicates a target and
