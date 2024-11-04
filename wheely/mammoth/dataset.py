@@ -327,17 +327,23 @@ class IntensityDataset(_Protocol):
     """
     Attributes
     ----------
-    columns : list of str
     data : pyspark.sql.DataFrame
-    intensities : pyspark.sql.DataFrame
+    columns : list of str
+    samples : pyspark.sql.Column
+    intensities : pyspark.sql.Column
+    sample_column: str
     intensity_column: str
     """
 
     data: _DataFrame
 
+    columns: _Iterable[str]
+
+    samples: _Column
+
     intensities: _Column
 
-    columns: _Iterable[str]
+    sample_column: str
 
     intensity_column: str
 
@@ -345,20 +351,34 @@ class IntensityDataset(_Protocol):
 class IntensityDatasetMixin:
     def __init__(
         self,
+        sample_column,
         intensity_column,
     ):
         """
         Parameters
         ----------
+        sample_column: str
+            The name of the column giving sample identifiers.
         intensity_column :  str
             The name of a column containing intensity values.
         """
+        self._sample_column = sample_column
         self._intensity_column = intensity_column
+
+    @property
+    def samples(self):
+        """A :py:class:`pyspark.sql.Column` of sample identifiers."""
+        return _col(self._sample_column)
 
     @property
     def intensities(self):
         """The intensities as a :py:class:`pyspark.sql.Column`."""
         return _col(self.intensity_column)
+
+    @property
+    def sample_column(self):
+        """The name of the column giving sample identifiers."""
+        return self._sample_column
 
     @property
     def intensity_column(self) -> str:
@@ -374,6 +394,7 @@ class PsmIntensityDataset(IntensityDatasetMixin, PsmDataset):
         score_columns,
         spectrum_columns,
         peptide_column,
+        sample_column: str,
         intensity_column: str,
         *_args,
         charge_column=None,
@@ -391,7 +412,11 @@ class PsmIntensityDataset(IntensityDatasetMixin, PsmDataset):
             protein_column=protein_column,
             protein_delim=protein_delim,
         )
-        IntensityDatasetMixin.__init__(self, intensity_column)
+        IntensityDatasetMixin.__init__(
+            self,
+            sample_column=sample_column,
+            intensity_column=intensity_column,
+        )
 
     @property
     def columns(self):
@@ -402,6 +427,7 @@ class PsmIntensityDataset(IntensityDatasetMixin, PsmDataset):
         """
         return [
             *super().columns,
+            self.sample_column,
             self.intensity_column,
         ]
 
@@ -410,6 +436,7 @@ class PsmIntensityDataset(IntensityDatasetMixin, PsmDataset):
             data,
             **dict(
                 dict(
+                    sample_column=self.sample_column,
                     intensity_column=self.intensity_column,
                 ),
                 **kwargs,

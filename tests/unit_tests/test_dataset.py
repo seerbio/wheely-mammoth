@@ -46,6 +46,7 @@ from wheely.mammoth import *
         lambda *args, **kwargs: PsmIntensityDataset(
             *args,
             **kwargs,
+            sample_column="filename",  # good enough for this test
             intensity_column="intensity",  # good enough for this test
         ),
     ]
@@ -119,9 +120,9 @@ def test_properties(basic_crux_spark_df, dataset_type):
             and (c := getattr(psms, a)) is not None
         ],
         *[
-            d.intensity_column
-            for d in [psms]
-            if isinstance(d, IntensityDataset)
+            getattr(psms, a)
+            for a in ["sample_column", "intensity_column"]
+            if isinstance(psms, IntensityDataset)
         ],
     }
 
@@ -149,9 +150,9 @@ def test_optional_cols(basic_crux_spark_df, dataset_type):
             and (c := getattr(psms, a)) is not None
         ],
         *[
-            d.intensity_column
-            for d in [psms]
-            if isinstance(d, IntensityDataset)
+            getattr(psms, a)
+            for a in ["sample_column", "intensity_column"]
+            if isinstance(psms, IntensityDataset)
         ],
     }
     assert all(c is not None for c in psms.columns)
