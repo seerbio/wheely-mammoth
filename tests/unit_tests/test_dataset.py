@@ -49,6 +49,15 @@ from wheely.mammoth import *
             sample_column="filename",  # good enough for this test
             intensity_column="intensity",  # good enough for this test
         ),
+        lambda *args, **kwargs: PsmIntensityConfidenceDataset(
+            *args,
+            **kwargs,
+            sample_column="filename",  # good enough for this test
+            intensity_column="intensity",  # good enough for this test
+            qvalue_column="q-value",  # good enough for this test
+            errprob_column="errprob",  # good enough for this test
+            pi0=0.95,
+        ),
     ]
 )
 def dataset_type(request):

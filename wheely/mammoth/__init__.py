@@ -11,4 +11,5 @@ from .dataset import (
     ConfidenceDataset,
     IntensityDataset,
     PsmIntensityDataset,
+    PsmIntensityConfidenceDataset,
 )
