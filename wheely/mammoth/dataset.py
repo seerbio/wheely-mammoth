@@ -349,11 +349,11 @@ class IntensityDataset(_Protocol):
     intensity_column: str
 
 
-class IntensityDatasetMixin:
+class IntensityDatasetMixin(IntensityDataset):
     def __init__(
         self,
-        sample_column,
-        intensity_column,
+        sample_column: str,
+        intensity_column: str,
     ):
         """
         Parameters
@@ -367,17 +367,17 @@ class IntensityDatasetMixin:
         self._intensity_column = intensity_column
 
     @property
-    def samples(self):
+    def samples(self) -> _Column:
         """A :py:class:`pyspark.sql.Column` of sample identifiers."""
         return _col(self._sample_column)
 
     @property
-    def intensities(self):
+    def intensities(self) -> _Column:
         """The intensities as a :py:class:`pyspark.sql.Column`."""
         return _col(self.intensity_column)
 
     @property
-    def sample_column(self):
+    def sample_column(self) -> str:
         """The name of the column giving sample identifiers."""
         return self._sample_column
 

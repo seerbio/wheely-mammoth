@@ -10,6 +10,7 @@ from pyspark.sql.functions import (
 )
 
 from ..utils import listify
+from ..dataset import IntensityDatasetMixin as _IntensityDatasetMixin
 
 LOGGER = _logging.getLogger(__name__)
 
@@ -249,3 +250,56 @@ class ProteinConfidenceDataset(ProteinDataset):
         estimated.
         """
         return self._pi0
+
+
+class ProteinIntensityDataset(ProteinDataset, _IntensityDatasetMixin):
+    """
+    Dataset with protein intensity information.
+    """
+
+    def __init__(
+        self,
+        data,
+        sample_column,
+        intensity_column,
+        protein_column,
+        protein_delim,
+        target_column,
+        score_columns,
+    ):
+        ProteinDataset.__init__(
+            self,
+            data,
+            protein_column=protein_column,
+            protein_delim=protein_delim,
+            target_column=target_column,
+            score_columns=score_columns,
+        )
+        _IntensityDatasetMixin.__init__(
+            self,
+            sample_column=sample_column,
+            intensity_column=intensity_column,
+        )
+
+    @property
+    def columns(self):
+        """
+        All the columns understood in this dataset.
+        """
+        return [
+            *super().columns,
+            self.sample_column,
+            self.intensity_column,
+        ]
+
+    def with_data(self, data, **kwargs):
+        return super().with_data(
+            data,
+            **dict(
+                dict(
+                    sample_column=self.sample_column,
+                    intensity_column=self.intensity_column,
+                ),
+                **kwargs,
+            ),
+        )

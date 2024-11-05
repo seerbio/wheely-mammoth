@@ -6,6 +6,7 @@ import pandas as pd
 import pyspark.sql.functions
 import pytest
 
+from wheely.mammoth import IntensityDataset
 from wheely.mammoth.proteins import *
 
 
@@ -41,6 +42,12 @@ from wheely.mammoth.proteins import *
             qvalue_column="q-value",  # good enough for this test
             errprob_column="errprob",  # good enough for this test
             pi0=0.95,
+        ),
+        lambda *args, **kwargs: ProteinIntensityDataset(
+            *args,
+            **kwargs,
+            sample_column="filename",  # good enough for this test
+            intensity_column="intensity",  # good enough for this test
         ),
     ]
 )
@@ -83,6 +90,11 @@ def test_properties(basic_protein_df, dataset_type):
             c
             for a in ["qvalue_column", "errprob_column"]
             if (c := getattr(dset, a, None)) is not None
+        ),
+        *(
+            getattr(dset, a)
+            for a in ["sample_column", "intensity_column"]
+            if isinstance(dset, IntensityDataset)
         ),
     }
 
