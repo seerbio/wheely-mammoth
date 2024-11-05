@@ -57,7 +57,7 @@ class ProteinDataset:
         data: pyspark.sql.DataFrame,
         protein_column: str,
         target_column: str,
-        score_columns: str,
+        score_columns: _List[str],
         protein_delim: str = None,
     ):
         """Initialize a PsmDataset object."""
@@ -165,7 +165,7 @@ class ProteinConfidenceDataset(ProteinDataset):
         data: pyspark.sql.DataFrame,
         protein_column: str,
         target_column: str,
-        score_columns: str,
+        score_columns: _List[str],
         qvalue_column: str,
         errprob_column: str = None,
         protein_delim: str = None,
@@ -268,7 +268,7 @@ class ProteinIntensityDataset(ProteinDataset, _IntensityDatasetMixin):
         intensity_column: str,
         protein_column: str,
         target_column: str,
-        score_columns: str,
+        score_columns: _List[str],
         protein_delim: str = None,
     ):
         ProteinDataset.__init__(
@@ -324,7 +324,7 @@ class ProteinIntensityConfidenceDataset(
         intensity_column: str,
         protein_column: str,
         target_column: str,
-        score_columns: str,
+        score_columns: _List[str],
         protein_delim: str = None,
         qvalue_column: str = None,
         errprob_column: str = None,
