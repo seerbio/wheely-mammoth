@@ -6,4 +6,5 @@ from .dataset import (
     ProteinDataset,
     ProteinConfidenceDataset,
     ProteinIntensityDataset,
+    ProteinIntensityConfidenceDataset,
 )

@@ -260,6 +260,7 @@ class ProteinIntensityDataset(ProteinDataset, _IntensityDatasetMixin):
     def __init__(
         self,
         data,
+        *_args,
         sample_column,
         intensity_column,
         protein_column,
@@ -274,6 +275,68 @@ class ProteinIntensityDataset(ProteinDataset, _IntensityDatasetMixin):
             protein_delim=protein_delim,
             target_column=target_column,
             score_columns=score_columns,
+        )
+        _IntensityDatasetMixin.__init__(
+            self,
+            sample_column=sample_column,
+            intensity_column=intensity_column,
+        )
+
+    @property
+    def columns(self):
+        """
+        All the columns understood in this dataset.
+        """
+        return [
+            *super().columns,
+            self.sample_column,
+            self.intensity_column,
+        ]
+
+    def with_data(self, data, **kwargs):
+        return super().with_data(
+            data,
+            **dict(
+                dict(
+                    sample_column=self.sample_column,
+                    intensity_column=self.intensity_column,
+                ),
+                **kwargs,
+            ),
+        )
+
+
+class ProteinIntensityConfidenceDataset(
+    ProteinConfidenceDataset, _IntensityDatasetMixin
+):
+    """
+    Dataset with protein intensity and confidence information.
+    """
+
+    def __init__(
+        self,
+        data,
+        *_args,
+        sample_column,
+        intensity_column,
+        protein_column,
+        target_column,
+        score_columns,
+        protein_delim=None,
+        qvalue_column=None,
+        errprob_column=None,
+        pi0: float = None,
+    ):
+        ProteinConfidenceDataset.__init__(
+            self,
+            data,
+            protein_column=protein_column,
+            protein_delim=protein_delim,
+            target_column=target_column,
+            score_columns=score_columns,
+            qvalue_column=qvalue_column,
+            errprob_column=errprob_column,
+            pi0=pi0,
         )
         _IntensityDatasetMixin.__init__(
             self,
