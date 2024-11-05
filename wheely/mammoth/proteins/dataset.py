@@ -2,6 +2,9 @@
 protein identifications.
 """
 
+from typing import (
+    List as _List,
+)
 import logging as _logging
 
 import pyspark.sql
@@ -52,10 +55,10 @@ class ProteinDataset:
     def __init__(
         self,
         data: pyspark.sql.DataFrame,
-        protein_column,
-        target_column,
-        score_columns,
-        protein_delim=None,
+        protein_column: str,
+        target_column: str,
+        score_columns: str,
+        protein_delim: str = None,
     ):
         """Initialize a PsmDataset object."""
         self._data = data
@@ -87,7 +90,7 @@ class ProteinDataset:
         )
 
     @property
-    def columns(self):
+    def columns(self) -> _List[str]:
         """
         The columns of the PSM :py:class:`pyspark.sql.DataFrame` that have defined
         semantics in this dataset. Note that additional columns may be available
@@ -101,37 +104,37 @@ class ProteinDataset:
         return cols
 
     @property
-    def data(self):
+    def data(self) -> pyspark.sql.DataFrame:
         """The collection of PSMs as a :py:class:`pyspark.sql.DataFrame`."""
         return self._data
 
     @property
-    def proteins(self):
+    def proteins(self) -> pyspark.sql.Column:
         """The proteins as a :py:class:`pyspark.sql.Column`."""
         return pyspark.sql.functions.col(self.protein_column)
 
     @property
-    def targets(self):
+    def targets(self) -> pyspark.sql.Column:
         """The PSM target/decoy column as a :py:class:`pyspark.sql.Column`"""
         return pyspark.sql.functions.col(self.target_column)
 
     @property
-    def scores(self):
+    def scores(self) -> pyspark.sql.DataFrame:
         """The PSM scores as a :py:class:`pyspark.sql.DataFrame`"""
         return self.data.select(*self.score_columns)
 
     @property
-    def protein_column(self):
+    def protein_column(self) -> str:
         """The name of the column giving protein information, or `None`."""
         return self._protein_column
 
     @property
-    def target_column(self):
+    def target_column(self) -> str:
         """The name of the column giving target/decoy information."""
         return self._target_column
 
     @property
-    def score_columns(self):
+    def score_columns(self) -> str:
         """The list of columns giving scores."""
         return self._score_columns
 
@@ -160,13 +163,13 @@ class ProteinConfidenceDataset(ProteinDataset):
     def __init__(
         self,
         data: pyspark.sql.DataFrame,
-        protein_column,
-        target_column,
-        score_columns,
-        qvalue_column,
-        errprob_column=None,
-        protein_delim=None,
-        pi0=None,
+        protein_column: str,
+        target_column: str,
+        score_columns: str,
+        qvalue_column: str,
+        errprob_column: str = None,
+        protein_delim: str = None,
+        pi0: float = None,
     ):
         self._qvalue_column = qvalue_column
         self._errprob_column = errprob_column
@@ -201,7 +204,7 @@ class ProteinConfidenceDataset(ProteinDataset):
         )
 
     @property
-    def columns(self):
+    def columns(self) -> _List[str]:
         """
         All the columns understood in this dataset.
         """
@@ -212,14 +215,14 @@ class ProteinConfidenceDataset(ProteinDataset):
         ]
 
     @property
-    def qvalues(self):
+    def qvalues(self) -> pyspark.sql.Column:
         """
         The PSM/peptide _q_-values as a :py:class:`pyspark.sql.Column`.
         """
         return pyspark.sql.functions.col(self.qvalue_column)
 
     @property
-    def errprobs(self):
+    def errprobs(self) -> pyspark.sql.Column:
         """
         The PSM/peptide posterior error probabilities (PEPs) as a :py:class:`pyspark.sql.Column`.
         """
@@ -230,21 +233,21 @@ class ProteinConfidenceDataset(ProteinDataset):
         )
 
     @property
-    def qvalue_column(self):
+    def qvalue_column(self) -> str:
         """
         The name of the column giving PSM/peptide _q_-values.
         """
         return self._qvalue_column
 
     @property
-    def errprob_column(self):
+    def errprob_column(self) -> str:
         """
         The name of the column giving PSM/peptide posterior error probabilities (PEPs).
         """
         return self._errprob_column
 
     @property
-    def pi0(self):
+    def pi0(self) -> float:
         """
         The estimated pi_0 value for the dataset, or `None`/`numpy.nan` if no such value was
         estimated.
@@ -259,14 +262,14 @@ class ProteinIntensityDataset(ProteinDataset, _IntensityDatasetMixin):
 
     def __init__(
         self,
-        data,
+        data: pyspark.sql.DataFrame,
         *_args,
-        sample_column,
-        intensity_column,
-        protein_column,
-        protein_delim,
-        target_column,
-        score_columns,
+        sample_column: str,
+        intensity_column: str,
+        protein_column: str,
+        target_column: str,
+        score_columns: str,
+        protein_delim: str = None,
     ):
         ProteinDataset.__init__(
             self,
@@ -283,7 +286,7 @@ class ProteinIntensityDataset(ProteinDataset, _IntensityDatasetMixin):
         )
 
     @property
-    def columns(self):
+    def columns(self) -> _List[str]:
         """
         All the columns understood in this dataset.
         """
@@ -315,16 +318,16 @@ class ProteinIntensityConfidenceDataset(
 
     def __init__(
         self,
-        data,
+        data: pyspark.sql.DataFrame,
         *_args,
-        sample_column,
-        intensity_column,
-        protein_column,
-        target_column,
-        score_columns,
-        protein_delim=None,
-        qvalue_column=None,
-        errprob_column=None,
+        sample_column: str,
+        intensity_column: str,
+        protein_column: str,
+        target_column: str,
+        score_columns: str,
+        protein_delim: str = None,
+        qvalue_column: str = None,
+        errprob_column: str = None,
         pi0: float = None,
     ):
         ProteinConfidenceDataset.__init__(
@@ -345,7 +348,7 @@ class ProteinIntensityConfidenceDataset(
         )
 
     @property
-    def columns(self):
+    def columns(self) -> _List[str]:
         """
         All the columns understood in this dataset.
         """

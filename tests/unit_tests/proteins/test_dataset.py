@@ -139,3 +139,12 @@ def test_mutate(basic_protein_df, dataset_type):
     )
 
     assert mut.protein_delim == ","
+
+    if isinstance(dset, ProteinConfidenceDataset):
+        assert mut.qvalue_column == dset.qvalue_column
+        assert mut.errprob_column == dset.errprob_column
+        assert mut.pi0 == dset.pi0
+
+    if isinstance(dset, IntensityDataset):
+        assert mut.sample_column == dset.sample_column
+        assert mut.intensity_column == dset.intensity_column
