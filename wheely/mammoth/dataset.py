@@ -6,6 +6,7 @@ import logging
 
 from typing import (
     Iterable as _Iterable,
+    List as _List,
     Protocol as _Protocol,
     runtime_checkable as _runtime_checkable,
 )
@@ -348,11 +349,11 @@ class IntensityDataset(_Protocol):
     intensity_column: str
 
 
-class IntensityDatasetMixin:
+class IntensityDatasetMixin(IntensityDataset):
     def __init__(
         self,
-        sample_column,
-        intensity_column,
+        sample_column: str,
+        intensity_column: str,
     ):
         """
         Parameters
@@ -366,17 +367,17 @@ class IntensityDatasetMixin:
         self._intensity_column = intensity_column
 
     @property
-    def samples(self):
+    def samples(self) -> _Column:
         """A :py:class:`pyspark.sql.Column` of sample identifiers."""
         return _col(self._sample_column)
 
     @property
-    def intensities(self):
+    def intensities(self) -> _Column:
         """The intensities as a :py:class:`pyspark.sql.Column`."""
         return _col(self.intensity_column)
 
     @property
-    def sample_column(self):
+    def sample_column(self) -> str:
         """The name of the column giving sample identifiers."""
         return self._sample_column
 
@@ -411,6 +412,70 @@ class PsmIntensityDataset(IntensityDatasetMixin, PsmDataset):
             charge_column=charge_column,
             protein_column=protein_column,
             protein_delim=protein_delim,
+        )
+        IntensityDatasetMixin.__init__(
+            self,
+            sample_column=sample_column,
+            intensity_column=intensity_column,
+        )
+
+    @property
+    def columns(self):
+        """
+        The columns of the :py:class:`pyspark.sql.DataFrame` that have defined
+        semantics in this dataset. Note that additional columns may be available
+        and will be preserved in the backing dataframe.
+        """
+        return [
+            *super().columns,
+            self.sample_column,
+            self.intensity_column,
+        ]
+
+    def with_data(self, data, **kwargs):
+        return super().with_data(
+            data,
+            **dict(
+                dict(
+                    sample_column=self.sample_column,
+                    intensity_column=self.intensity_column,
+                ),
+                **kwargs,
+            ),
+        )
+
+
+class PsmIntensityConfidenceDataset(ConfidenceDataset, IntensityDatasetMixin):
+    def __init__(
+        self,
+        psms: pyspark.sql.DataFrame,
+        target_column: str,
+        score_columns: _List[str],
+        spectrum_columns: _List[str],
+        peptide_column: str,
+        qvalue_column: str,
+        sample_column: str,
+        intensity_column: str,
+        *_args,
+        charge_column: str = None,
+        protein_column: str = None,
+        protein_delim: str = None,
+        errprob_column: str = None,
+        pi0: float = None,
+    ):
+        ConfidenceDataset.__init__(
+            self,
+            psms=psms,
+            target_column=target_column,
+            score_columns=score_columns,
+            spectrum_columns=spectrum_columns,
+            peptide_column=peptide_column,
+            qvalue_column=qvalue_column,
+            charge_column=charge_column,
+            protein_column=protein_column,
+            protein_delim=protein_delim,
+            errprob_column=errprob_column,
+            pi0=pi0,
         )
         IntensityDatasetMixin.__init__(
             self,

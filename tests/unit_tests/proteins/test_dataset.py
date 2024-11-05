@@ -6,6 +6,7 @@ import pandas as pd
 import pyspark.sql.functions
 import pytest
 
+from wheely.mammoth import IntensityDataset
 from wheely.mammoth.proteins import *
 
 
@@ -38,6 +39,21 @@ from wheely.mammoth.proteins import *
         lambda *args, **kwargs: ProteinConfidenceDataset(
             *args,
             **kwargs,
+            qvalue_column="q-value",  # good enough for this test
+            errprob_column="errprob",  # good enough for this test
+            pi0=0.95,
+        ),
+        lambda *args, **kwargs: ProteinIntensityDataset(
+            *args,
+            **kwargs,
+            sample_column="filename",  # good enough for this test
+            intensity_column="intensity",  # good enough for this test
+        ),
+        lambda *args, **kwargs: ProteinIntensityConfidenceDataset(
+            *args,
+            **kwargs,
+            sample_column="filename",  # good enough for this test
+            intensity_column="intensity",  # good enough for this test
             qvalue_column="q-value",  # good enough for this test
             errprob_column="errprob",  # good enough for this test
             pi0=0.95,
@@ -84,6 +100,11 @@ def test_properties(basic_protein_df, dataset_type):
             for a in ["qvalue_column", "errprob_column"]
             if (c := getattr(dset, a, None)) is not None
         ),
+        *(
+            getattr(dset, a)
+            for a in ["sample_column", "intensity_column"]
+            if isinstance(dset, IntensityDataset)
+        ),
     }
 
 
@@ -118,3 +139,12 @@ def test_mutate(basic_protein_df, dataset_type):
     )
 
     assert mut.protein_delim == ","
+
+    if isinstance(dset, ProteinConfidenceDataset):
+        assert mut.qvalue_column == dset.qvalue_column
+        assert mut.errprob_column == dset.errprob_column
+        assert mut.pi0 == dset.pi0
+
+    if isinstance(dset, IntensityDataset):
+        assert mut.sample_column == dset.sample_column
+        assert mut.intensity_column == dset.intensity_column

@@ -49,6 +49,15 @@ from wheely.mammoth import *
             sample_column="filename",  # good enough for this test
             intensity_column="intensity",  # good enough for this test
         ),
+        lambda *args, **kwargs: PsmIntensityConfidenceDataset(
+            *args,
+            **kwargs,
+            sample_column="filename",  # good enough for this test
+            intensity_column="intensity",  # good enough for this test
+            qvalue_column="q-value",  # good enough for this test
+            errprob_column="errprob",  # good enough for this test
+            pi0=0.95,
+        ),
     ]
 )
 def dataset_type(request):
@@ -197,10 +206,11 @@ def test_mutate(basic_crux_spark_df, dataset_type):
     # assert mut.protein_column == "protein id"
     assert mut.protein_delim == ","
 
-    if isinstance(mut, ConfidenceDataset):
+    if isinstance(psms, ConfidenceDataset):
         assert mut.qvalue_column == psms.qvalue_column
         assert mut.errprob_column == psms.errprob_column
         assert mut.pi0 == psms.pi0
 
-    if isinstance(mut, PsmIntensityDataset):
+    if isinstance(psms, IntensityDataset):
+        assert mut.sample_column == psms.sample_column
         assert mut.intensity_column == psms.intensity_column
