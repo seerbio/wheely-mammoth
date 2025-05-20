@@ -332,8 +332,12 @@ class IntensityDataset(_Protocol):
     columns : list of str
     samples : pyspark.sql.Column
     intensities : pyspark.sql.Column
-    sample_column: str
-    intensity_column: str
+    sample_column : str
+    intensity_column : str
+        The name of the column containing primary intensity values.
+    intensity_columns : str
+        The names of all columns containing intensity values.
+        This permits reporting multiple types of intensity.
     """
 
     data: _DataFrame
@@ -348,12 +352,15 @@ class IntensityDataset(_Protocol):
 
     intensity_column: str
 
+    intensity_columns: _List[str]
+
 
 class IntensityDatasetMixin(IntensityDataset):
     def __init__(
         self,
         sample_column: str,
         intensity_column: str,
+        intensity_columns: _Iterable[str] = None,
     ):
         """
         Parameters
@@ -362,9 +369,20 @@ class IntensityDatasetMixin(IntensityDataset):
             The name of the column giving sample identifiers.
         intensity_column :  str
             The name of a column containing intensity values.
+        intensity_columns : [str], optional
+            The names of all columns containing intensity values.
+            If `None`, only the `intensity_column` is used.
         """
         self._sample_column = sample_column
         self._intensity_column = intensity_column
+        self._intensity_columns = [
+            self._intensity_column,
+            *[
+                c
+                for c in intensity_columns or []
+                if c != self._intensity_column
+            ],
+        ]
 
     @property
     def samples(self) -> _Column:
@@ -386,6 +404,11 @@ class IntensityDatasetMixin(IntensityDataset):
         """The name of the column containing intensities."""
         return self._intensity_column
 
+    @property
+    def intensity_columns(self) -> str:
+        """The name of the column containing intensities."""
+        return [*self._intensity_columns]
+
 
 class PsmIntensityDataset(IntensityDatasetMixin, PsmDataset):
     def __init__(
@@ -398,10 +421,14 @@ class PsmIntensityDataset(IntensityDatasetMixin, PsmDataset):
         sample_column: str,
         intensity_column: str,
         *_args,
+        intensity_columns: _Iterable[str] = None,
         charge_column=None,
         protein_column=None,
         protein_delim=None,
     ):
+        if _args:
+            raise TypeError("Additional positional arguments are unsupported!")
+
         PsmDataset.__init__(
             self,
             psms=psms,
@@ -417,6 +444,7 @@ class PsmIntensityDataset(IntensityDatasetMixin, PsmDataset):
             self,
             sample_column=sample_column,
             intensity_column=intensity_column,
+            intensity_columns=intensity_columns,
         )
 
     @property
@@ -429,7 +457,7 @@ class PsmIntensityDataset(IntensityDatasetMixin, PsmDataset):
         return [
             *super().columns,
             self.sample_column,
-            self.intensity_column,
+            *self.intensity_columns,
         ]
 
     def with_data(self, data, **kwargs):
@@ -439,6 +467,7 @@ class PsmIntensityDataset(IntensityDatasetMixin, PsmDataset):
                 dict(
                     sample_column=self.sample_column,
                     intensity_column=self.intensity_column,
+                    intensity_columns=self.intensity_columns,
                 ),
                 **kwargs,
             ),
@@ -457,12 +486,16 @@ class PsmIntensityConfidenceDataset(ConfidenceDataset, IntensityDatasetMixin):
         sample_column: str,
         intensity_column: str,
         *_args,
+        intensity_columns: _Iterable[str] = None,
         charge_column: str = None,
         protein_column: str = None,
         protein_delim: str = None,
         errprob_column: str = None,
         pi0: float = None,
     ):
+        if _args:
+            raise TypeError("Additional positional arguments are unsupported!")
+
         ConfidenceDataset.__init__(
             self,
             psms=psms,
@@ -481,6 +514,7 @@ class PsmIntensityConfidenceDataset(ConfidenceDataset, IntensityDatasetMixin):
             self,
             sample_column=sample_column,
             intensity_column=intensity_column,
+            intensity_columns=intensity_columns,
         )
 
     @property
@@ -493,7 +527,7 @@ class PsmIntensityConfidenceDataset(ConfidenceDataset, IntensityDatasetMixin):
         return [
             *super().columns,
             self.sample_column,
-            self.intensity_column,
+            *self.intensity_columns,
         ]
 
     def with_data(self, data, **kwargs):
@@ -503,6 +537,7 @@ class PsmIntensityConfidenceDataset(ConfidenceDataset, IntensityDatasetMixin):
                 dict(
                     sample_column=self.sample_column,
                     intensity_column=self.intensity_column,
+                    intensity_columns=self.intensity_columns,
                 ),
                 **kwargs,
             ),
