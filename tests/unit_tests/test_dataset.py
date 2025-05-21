@@ -2,6 +2,8 @@
 These are unit tests for the PSM Dataset Class:
 """
 
+from itertools import chain as _chain
+
 import pandas as pd
 import pyspark.sql.functions
 import pytest
@@ -49,11 +51,34 @@ from wheely.mammoth import *
             sample_column="filename",  # good enough for this test
             intensity_column="intensity",  # good enough for this test
         ),
+        lambda *args, **kwargs: PsmIntensityDataset(
+            *args,
+            **kwargs,
+            sample_column="filename",  # good enough for this test
+            intensity_column="intensity",  # good enough for this test
+            intensity_columns=[
+                "intensity",
+                "norm_intensity",
+            ],  # good enough for this test
+        ),
         lambda *args, **kwargs: PsmIntensityConfidenceDataset(
             *args,
             **kwargs,
             sample_column="filename",  # good enough for this test
             intensity_column="intensity",  # good enough for this test
+            qvalue_column="q-value",  # good enough for this test
+            errprob_column="errprob",  # good enough for this test
+            pi0=0.95,
+        ),
+        lambda *args, **kwargs: PsmIntensityConfidenceDataset(
+            *args,
+            **kwargs,
+            sample_column="filename",  # good enough for this test
+            intensity_column="intensity",  # good enough for this test
+            intensity_columns=[
+                "intensity",
+                "norm_intensity",
+            ],  # good enough for this test
             qvalue_column="q-value",  # good enough for this test
             errprob_column="errprob",  # good enough for this test
             pi0=0.95,
@@ -133,6 +158,13 @@ def test_properties(basic_crux_spark_df, dataset_type):
             for a in ["sample_column", "intensity_column"]
             if isinstance(psms, IntensityDataset)
         ],
+        *_chain(
+            *[
+                getattr(psms, a)
+                for a in ["intensity_columns"]
+                if isinstance(psms, IntensityDataset)
+            ]
+        ),
     }
 
 
@@ -163,6 +195,13 @@ def test_optional_cols(basic_crux_spark_df, dataset_type):
             for a in ["sample_column", "intensity_column"]
             if isinstance(psms, IntensityDataset)
         ],
+        *_chain(
+            *[
+                getattr(psms, a)
+                for a in ["intensity_columns"]
+                if isinstance(psms, IntensityDataset)
+            ]
+        ),
     }
     assert all(c is not None for c in psms.columns)
 
@@ -214,3 +253,5 @@ def test_mutate(basic_crux_spark_df, dataset_type):
     if isinstance(psms, IntensityDataset):
         assert mut.sample_column == psms.sample_column
         assert mut.intensity_column == psms.intensity_column
+        assert mut.intensity_column in mut.intensity_columns
+        assert mut.intensity_columns == psms.intensity_columns
