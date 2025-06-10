@@ -335,7 +335,7 @@ class IntensityDataset(_Protocol):
     sample_column : str
     intensity_column : str
         The name of the column containing primary intensity values.
-    intensity_columns : str
+    intensity_columns : List[str]
         The names of all columns containing intensity values.
         This permits reporting multiple types of intensity.
     """
@@ -371,7 +371,7 @@ class IntensityDatasetMixin(IntensityDataset):
             The name of a column containing intensity values.
         intensity_columns : [str], optional
             The names of all columns containing intensity values.
-            If `None`, only the `intensity_column` is used.
+            If ``None`` (default), only the ``intensity_column`` is used.
         """
         self._sample_column = sample_column
         self._intensity_column = intensity_column
@@ -406,7 +406,7 @@ class IntensityDatasetMixin(IntensityDataset):
 
     @property
     def intensity_columns(self) -> _List[str]:
-        """The name of the column containing intensities."""
+        """The names of the columns containing intensities."""
         return [*self._intensity_columns]
 
 
