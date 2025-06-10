@@ -405,7 +405,7 @@ class IntensityDatasetMixin(IntensityDataset):
         return self._intensity_column
 
     @property
-    def intensity_columns(self) -> str:
+    def intensity_columns(self) -> _List[str]:
         """The name of the column containing intensities."""
         return [*self._intensity_columns]
 
