@@ -38,3 +38,10 @@ jobs:
     - name: Test with pytest
       run: |
         pytest
+      if: runner.os != 'macOS'
+    - name: Test with pytest (macOS)
+      run: |
+        pytest
+      if: runner.os == 'macOS'
+      env:
+        JAVA_HOME: ${{ env.JAVA_HOME_17_arm64 }}
