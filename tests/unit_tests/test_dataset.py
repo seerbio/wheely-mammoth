@@ -265,6 +265,7 @@ def test_mutate(basic_crux_spark_df, dataset_type):
             "isDecoy", pyspark.sql.functions.col("target").astype("int") == 0
         ),
         target_column="isDecoy",
+        semantics={"isDecoy": BasicSemantic("decoy flag")},
     )
 
     assert isinstance(mut, type(psms))
@@ -283,8 +284,8 @@ def test_mutate(basic_crux_spark_df, dataset_type):
         mut, "semantics"
     ), "Mutated dataset should have 'semantics' attribute"
     assert (
-        mut.semantics == psms.semantics
-    ), "Semantics should be preserved in with_data()"
+        mut.get_by_semantics(BasicSemantic("decoy flag")) == "isDecoy"
+    ), "Mutated dataset did not have mutated semantic"
 
     # For PsmDataset and subclasses: verify forced semantics unchanged
     if hasattr(psms, "charge_column") and psms.charge_column is not None:

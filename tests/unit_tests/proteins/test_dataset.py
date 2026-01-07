@@ -158,6 +158,7 @@ def test_mutate(basic_protein_df, dataset_type):
             "isDecoy", pyspark.sql.functions.col("target").astype("int") == 0
         ),
         target_column="isDecoy",
+        semantics={"isDecoy": BasicSemantic("decoy flag")},
     )
 
     assert isinstance(mut, type(dset))
@@ -175,8 +176,8 @@ def test_mutate(basic_protein_df, dataset_type):
         mut, "semantics"
     ), "Mutated dataset should have 'semantics' attribute"
     assert (
-        mut.semantics == dset.semantics
-    ), "Semantics should be preserved in with_data()"
+        mut.get_by_semantics(BasicSemantic("decoy flag")) == "isDecoy"
+    ), "Mutated dataset did not have mutated semantic"
 
     # For datasets with custom semantics, verify get_semantics still works
     if "test_col" in mut.semantics:
