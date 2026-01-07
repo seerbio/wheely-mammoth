@@ -4,6 +4,7 @@ protein identifications.
 
 from typing import (
     List as _List,
+    Mapping as _Mapping,
 )
 import logging as _logging
 
@@ -14,11 +15,15 @@ from pyspark.sql.functions import (
 
 from ..utils import listify
 from ..dataset import IntensityDatasetMixin as _IntensityDatasetMixin
+from ..semantics import (
+    SemanticDatasetMixin as _SemanticDatasetMixin,
+    SemanticInfo as _SemanticInfo,
+)
 
 LOGGER = _logging.getLogger(__name__)
 
 
-class ProteinDataset:
+class ProteinDataset(_SemanticDatasetMixin):
     """A collection of protein or protein group IDs backed by a :py:class:`pyspark.sql.DataFrame`
 
     Parameters
@@ -41,6 +46,8 @@ class ProteinDataset:
         in the protein column. Not required if `protein_column` contains only a
         single identifier for each protein group, or if `protein_column` is
         list-valued.
+    semantics : Mapping[str, SemanticInfo], optional
+        Optional mapping to specify the semantics of dataset columns.
 
     Attributes
     ----------
@@ -50,6 +57,7 @@ class ProteinDataset:
     scores : pyspark.sql.DataFrame
     targets : pyspark.sql.Column
     protein_delim : str
+    semantics : Mapping[str, SemanticInfo]
     """
 
     def __init__(
@@ -59,13 +67,17 @@ class ProteinDataset:
         target_column: str,
         score_columns: _List[str],
         protein_delim: str = None,
+        semantics: _Mapping[str, _SemanticInfo] = None,
     ):
-        """Initialize a PsmDataset object."""
+        """Initialize a ProteinDataset object."""
         self._data = data
         self._protein_column = protein_column
         self._target_column = target_column
         self._score_columns = listify(score_columns)
         self._protein_delim = protein_delim
+
+        # Initialize the mixin with semantics
+        _SemanticDatasetMixin.__init__(self, semantics or {})
 
     def with_data(self, data, **kwargs):
         """
@@ -76,6 +88,12 @@ class ProteinDataset:
         This permits mutating the data (e.g. to filter it), or altering the semantics
         of the dataset.
         """
+        semantics = {
+            **self.semantics,
+        }
+        if "semantics" in kwargs:
+            semantics.update(kwargs.pop("semantics"))
+
         return type(self)(
             data,
             **dict(
@@ -86,6 +104,7 @@ class ProteinDataset:
                     protein_delim=self.protein_delim,
                 ),
                 **kwargs,
+                semantics=semantics,
             ),
         )
 
@@ -170,6 +189,7 @@ class ProteinConfidenceDataset(ProteinDataset):
         errprob_column: str = None,
         protein_delim: str = None,
         pi0: float = None,
+        semantics: _Mapping[str, _SemanticInfo] = None,
     ):
         self._qvalue_column = qvalue_column
         self._errprob_column = errprob_column
@@ -180,6 +200,7 @@ class ProteinConfidenceDataset(ProteinDataset):
             target_column=target_column,
             score_columns=score_columns,
             protein_delim=protein_delim,
+            semantics=semantics,
         )
 
     def with_data(self, data, **kwargs):
@@ -270,7 +291,11 @@ class ProteinIntensityDataset(ProteinDataset, _IntensityDatasetMixin):
         target_column: str,
         score_columns: _List[str],
         protein_delim: str = None,
+        semantics: _Mapping[str, _SemanticInfo] = None,
     ):
+        if _args:
+            raise TypeError("Additional positional arguments are unsupported!")
+
         ProteinDataset.__init__(
             self,
             data,
@@ -278,6 +303,7 @@ class ProteinIntensityDataset(ProteinDataset, _IntensityDatasetMixin):
             protein_delim=protein_delim,
             target_column=target_column,
             score_columns=score_columns,
+            semantics=semantics,
         )
         _IntensityDatasetMixin.__init__(
             self,
@@ -329,7 +355,11 @@ class ProteinIntensityConfidenceDataset(
         qvalue_column: str = None,
         errprob_column: str = None,
         pi0: float = None,
+        semantics: _Mapping[str, _SemanticInfo] = None,
     ):
+        if _args:
+            raise TypeError("Additional positional arguments are unsupported!")
+
         ProteinConfidenceDataset.__init__(
             self,
             data,
@@ -340,6 +370,7 @@ class ProteinIntensityConfidenceDataset(
             qvalue_column=qvalue_column,
             errprob_column=errprob_column,
             pi0=pi0,
+            semantics=semantics,
         )
         _IntensityDatasetMixin.__init__(
             self,

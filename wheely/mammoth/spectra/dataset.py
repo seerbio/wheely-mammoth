@@ -4,6 +4,7 @@
 
 from typing import (
     Iterable as _Iterable,
+    Mapping as _Mapping,
     Protocol as _Protocol,
     runtime_checkable as _runtime_checkable,
 )
@@ -18,6 +19,11 @@ from pyspark.sql.functions import (
 )
 
 from ..utils import listify as _listify
+from ..semantics import (
+    SemanticDatasetMixin as _SemanticDatasetMixin,
+    SemanticInfo as _SemanticInfo,
+    CHARGE as _CHARGE,
+)
 
 
 @_runtime_checkable
@@ -54,7 +60,7 @@ class PrecursorDataset(_Protocol):
     rt_column: str
 
 
-class PrecursorDatasetBase(PrecursorDataset):
+class PrecursorDatasetBase(PrecursorDataset, _SemanticDatasetMixin):
     def __init__(
         self,
         psms: _DataFrame,
@@ -62,6 +68,7 @@ class PrecursorDatasetBase(PrecursorDataset):
         charge_column,
         mz_column,
         rt_column,
+        semantics: _Mapping[str, _SemanticInfo] = None,
     ):
         """
         Parameters
@@ -76,12 +83,28 @@ class PrecursorDatasetBase(PrecursorDataset):
             The name of a column giving the precursor m/z of the spectrum.
         rt_column : str
             The name of a column giving the spectrum's retention time, in an arbitrary scale.
+        semantics : Mapping[str, SemanticInfo], optional
+            Optional mapping to specify the semantics of dataset columns.
+
+            The following columns will have default semantics assigned; if
+            they are included in this mapping, the provided value will be ignored:
+
+            - ``charge_column``
         """
         self._data = psms
         self._spectrum_columns = _listify(spectrum_columns)
         self._charge_column = charge_column
         self._mz_column = mz_column
         self._rt_column = rt_column
+
+        # Build default semantics
+        semantics = {**(semantics or {})}
+
+        if charge_column is not None:
+            semantics[charge_column] = _CHARGE
+
+        # Initialize the mixin with semantics
+        _SemanticDatasetMixin.__init__(self, semantics)
 
     def with_data(self, data, **kwargs):
         """
@@ -91,6 +114,12 @@ class PrecursorDatasetBase(PrecursorDataset):
         This permits mutating the data (e.g. to filter it), or altering the semantics
         of the dataset.
         """
+        semantics = {
+            **self.semantics,
+        }
+        if "semantics" in kwargs:
+            semantics.update(kwargs.pop("semantics"))
+
         return type(self)(
             data,
             **dict(
@@ -101,6 +130,7 @@ class PrecursorDatasetBase(PrecursorDataset):
                     rt_column=self.rt_column,
                 ),
                 **kwargs,
+                semantics=semantics,
             ),
         )
 
@@ -246,6 +276,7 @@ class SpectraDatasetBase(
         mz_column,
         rt_column,
         peaklist_column,
+        semantics: _Mapping[str, _SemanticInfo] = None,
     ):
         PrecursorDatasetBase.__init__(
             self,
@@ -254,8 +285,27 @@ class SpectraDatasetBase(
             charge_column,
             mz_column,
             rt_column,
+            semantics=semantics,
         )
         SpectraDatasetMixin.__init__(self, peaklist_column)
+
+    def with_data(self, data, **kwargs):
+        """
+        Return a new :py:class:`SpectraDatasetBase` backed by `data` but otherwise identical
+        to this dataset. Optionally, any arguments accepted by `SpectraDatasetBase()` can be
+        passed as keywords and will override the value from this dataset.
+        This permits mutating the data (e.g. to filter it), or altering the semantics
+        of the dataset.
+        """
+        return super().with_data(
+            data,
+            **dict(
+                dict(
+                    peaklist_column=self.peaklist_column,
+                ),
+                **kwargs,
+            ),
+        )
 
     @property
     def columns(self):

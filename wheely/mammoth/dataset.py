@@ -266,6 +266,7 @@ class ConfidenceDataset(PsmDataset):
         protein_column=None,
         protein_delim=None,
         errprob_column=None,
+        semantics: _Mapping[str, _SemanticInfo] = None,
     ):
         self._qvalue_column = qvalue_column
         self._errprob_column = errprob_column
@@ -279,6 +280,7 @@ class ConfidenceDataset(PsmDataset):
             charge_column=charge_column,
             protein_column=protein_column,
             protein_delim=protein_delim,
+            semantics=semantics,
         )
 
     def with_data(self, data, **kwargs):
@@ -456,6 +458,7 @@ class PsmIntensityDataset(IntensityDatasetMixin, PsmDataset):
         charge_column=None,
         protein_column=None,
         protein_delim=None,
+        semantics: _Mapping[str, _SemanticInfo] = None,
     ):
         if _args:
             raise TypeError("Additional positional arguments are unsupported!")
@@ -470,6 +473,7 @@ class PsmIntensityDataset(IntensityDatasetMixin, PsmDataset):
             charge_column=charge_column,
             protein_column=protein_column,
             protein_delim=protein_delim,
+            semantics=semantics,
         )
         IntensityDatasetMixin.__init__(
             self,
@@ -523,6 +527,7 @@ class PsmIntensityConfidenceDataset(ConfidenceDataset, IntensityDatasetMixin):
         protein_delim: str = None,
         errprob_column: str = None,
         pi0: float = None,
+        semantics: _Mapping[str, _SemanticInfo] = None,
     ):
         if _args:
             raise TypeError("Additional positional arguments are unsupported!")
@@ -540,6 +545,7 @@ class PsmIntensityConfidenceDataset(ConfidenceDataset, IntensityDatasetMixin):
             protein_delim=protein_delim,
             errprob_column=errprob_column,
             pi0=pi0,
+            semantics=semantics,
         )
         IntensityDatasetMixin.__init__(
             self,
