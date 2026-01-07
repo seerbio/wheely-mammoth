@@ -10,6 +10,7 @@ import pytest
 
 import wheely.mammoth.dataset
 from wheely.mammoth import *
+from wheely.mammoth.semantics import CHARGE, BasicSemantic
 
 
 @pytest.fixture(
@@ -83,6 +84,25 @@ from wheely.mammoth import *
             errprob_column="errprob",  # good enough for this test
             pi0=0.95,
         ),
+        # Semantics variants
+        lambda *args, **kwargs: PsmDataset(
+            *args,
+            **kwargs,
+            semantics={"test_col": BasicSemantic("Test semantic")},
+        ),
+        lambda *args, **kwargs: ConfidenceDataset(
+            *args,
+            **kwargs,
+            qvalue_column="q-value",
+            semantics={"test_col": BasicSemantic("Test semantic")},
+        ),
+        lambda *args, **kwargs: PsmIntensityDataset(
+            *args,
+            **kwargs,
+            sample_column="filename",
+            intensity_column="intensity",
+            semantics={"test_col": BasicSemantic("Test semantic")},
+        ),
     ]
 )
 def dataset_type(request):
@@ -138,6 +158,25 @@ def test_properties(basic_crux_spark_df, dataset_type):
             assert (getattr(psms, ca) is None) == (getattr(psms, a) is None)
         except Exception as e:
             raise AssertionError(f"Error testing {ca}/{a}") from e
+
+    # Check that semantics are properly initialized
+    assert hasattr(
+        psms, "semantics"
+    ), "Dataset should have 'semantics' attribute"
+    assert isinstance(psms.semantics, dict), "semantics should be a dict"
+
+    # For datasets with custom semantics in fixture:
+    if "test_col" in psms.semantics:
+        assert psms.semantics["test_col"] is not None
+        # Test get_semantics method
+        assert psms.get_semantics("test_col") == psms.semantics["test_col"]
+
+    # For PsmDataset and subclasses: verify forced charge semantics
+    if hasattr(psms, "charge_column") and psms.charge_column is not None:
+        assert psms.charge_column in psms.semantics
+        assert psms.semantics[psms.charge_column] == CHARGE
+        # Test get_by_semantics method
+        assert psms.get_by_semantics(CHARGE) == psms.charge_column
 
     assert all(c is not None for c in psms.columns)
     assert set(psms.columns) == {
@@ -238,6 +277,19 @@ def test_mutate(basic_crux_spark_df, dataset_type):
         ).collect()[0][0]
         == n_rows - n_targets
     )
+
+    # Check that semantics are preserved through with_data()
+    assert hasattr(
+        mut, "semantics"
+    ), "Mutated dataset should have 'semantics' attribute"
+    assert (
+        mut.semantics == psms.semantics
+    ), "Semantics should be preserved in with_data()"
+
+    # For PsmDataset and subclasses: verify forced semantics unchanged
+    if hasattr(psms, "charge_column") and psms.charge_column is not None:
+        assert mut.semantics[mut.charge_column] == CHARGE
+        assert mut.get_by_semantics(CHARGE) == mut.charge_column
 
     # assert list(mut.spectra.columns) == ["file", "scan"]
     # assert list(mut.scores.columns) == ["combined p-value", "x"]

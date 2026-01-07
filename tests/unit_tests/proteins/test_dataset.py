@@ -8,6 +8,7 @@ import pytest
 
 from wheely.mammoth import IntensityDataset
 from wheely.mammoth.proteins import *
+from wheely.mammoth.semantics import BasicSemantic
 
 
 @pytest.fixture(
@@ -58,6 +59,25 @@ from wheely.mammoth.proteins import *
             errprob_column="errprob",  # good enough for this test
             pi0=0.95,
         ),
+        # Semantics variants
+        lambda *args, **kwargs: ProteinDataset(
+            *args,
+            **kwargs,
+            semantics={"test_col": BasicSemantic("Test semantic")},
+        ),
+        lambda *args, **kwargs: ProteinConfidenceDataset(
+            *args,
+            **kwargs,
+            qvalue_column="q-value",
+            semantics={"test_col": BasicSemantic("Test semantic")},
+        ),
+        lambda *args, **kwargs: ProteinIntensityDataset(
+            *args,
+            **kwargs,
+            sample_column="filename",
+            intensity_column="intensity",
+            semantics={"test_col": BasicSemantic("Test semantic")},
+        ),
     ]
 )
 def dataset_type(request):
@@ -89,6 +109,18 @@ def test_properties(basic_protein_df, dataset_type):
         dset.data.select(dset.targets).toPandas(),
         basic_protein_df.toPandas().loc[:, ["target"]],
     )
+
+    # Check that semantics are properly initialized
+    assert hasattr(
+        dset, "semantics"
+    ), "Dataset should have 'semantics' attribute"
+    assert isinstance(dset.semantics, dict), "semantics should be a dict"
+
+    # For datasets with custom semantics in fixture:
+    if "test_col" in dset.semantics:
+        assert dset.semantics["test_col"] is not None
+        # Test get_semantics method
+        assert dset.get_semantics("test_col") == dset.semantics["test_col"]
 
     assert all(c is not None for c in dset.columns)
     assert set(dset.columns) == {
@@ -137,6 +169,18 @@ def test_mutate(basic_protein_df, dataset_type):
         ).collect()[0][0]
         == n_rows - n_targets
     )
+
+    # Check that semantics are preserved through with_data()
+    assert hasattr(
+        mut, "semantics"
+    ), "Mutated dataset should have 'semantics' attribute"
+    assert (
+        mut.semantics == dset.semantics
+    ), "Semantics should be preserved in with_data()"
+
+    # For datasets with custom semantics, verify get_semantics still works
+    if "test_col" in mut.semantics:
+        assert mut.get_semantics("test_col") == dset.get_semantics("test_col")
 
     assert mut.protein_delim == ","
 
