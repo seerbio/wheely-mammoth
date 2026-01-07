@@ -5,6 +5,7 @@ protein identifications.
 from typing import (
     List as _List,
     Mapping as _Mapping,
+    Optional as _Optional,
 )
 import logging as _logging
 
@@ -67,7 +68,7 @@ class ProteinDataset(_SemanticDatasetMixin):
         target_column: str,
         score_columns: _List[str],
         protein_delim: str = None,
-        semantics: _Mapping[str, _SemanticInfo] = None,
+        semantics: _Optional[_Mapping[str, _SemanticInfo]] = None,
     ):
         """Initialize a ProteinDataset object."""
         self._data = data
@@ -189,7 +190,7 @@ class ProteinConfidenceDataset(ProteinDataset):
         errprob_column: str = None,
         protein_delim: str = None,
         pi0: float = None,
-        semantics: _Mapping[str, _SemanticInfo] = None,
+        semantics: _Optional[_Mapping[str, _SemanticInfo]] = None,
     ):
         self._qvalue_column = qvalue_column
         self._errprob_column = errprob_column
@@ -291,7 +292,7 @@ class ProteinIntensityDataset(ProteinDataset, _IntensityDatasetMixin):
         target_column: str,
         score_columns: _List[str],
         protein_delim: str = None,
-        semantics: _Mapping[str, _SemanticInfo] = None,
+        semantics: _Optional[_Mapping[str, _SemanticInfo]] = None,
     ):
         if _args:
             raise TypeError("Additional positional arguments are unsupported!")
@@ -355,7 +356,7 @@ class ProteinIntensityConfidenceDataset(
         qvalue_column: str = None,
         errprob_column: str = None,
         pi0: float = None,
-        semantics: _Mapping[str, _SemanticInfo] = None,
+        semantics: _Optional[_Mapping[str, _SemanticInfo]] = None,
     ):
         if _args:
             raise TypeError("Additional positional arguments are unsupported!")

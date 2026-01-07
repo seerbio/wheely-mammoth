@@ -5,6 +5,7 @@
 from typing import (
     Iterable as _Iterable,
     Mapping as _Mapping,
+    Optional as _Optional,
     Protocol as _Protocol,
     runtime_checkable as _runtime_checkable,
 )
@@ -68,7 +69,7 @@ class PrecursorDatasetBase(PrecursorDataset, _SemanticDatasetMixin):
         charge_column,
         mz_column,
         rt_column,
-        semantics: _Mapping[str, _SemanticInfo] = None,
+        semantics: _Optional[_Mapping[str, _SemanticInfo]] = None,
     ):
         """
         Parameters
@@ -276,7 +277,7 @@ class SpectraDatasetBase(
         mz_column,
         rt_column,
         peaklist_column,
-        semantics: _Mapping[str, _SemanticInfo] = None,
+        semantics: _Optional[_Mapping[str, _SemanticInfo]] = None,
     ):
         PrecursorDatasetBase.__init__(
             self,

@@ -99,11 +99,13 @@ class UnknownSemantic(SemanticInfo):
     Not equal to any other semantic info, including other UnknownSemantic instances.
     """
 
+    name = "<unknown>"
+
     def __eq__(self, other):
         return False
 
     def __repr__(self):
-        return "<unknown>"
+        return self.name
 
 
 PSM_QVALUE: SemanticInfo = CVSemantic(

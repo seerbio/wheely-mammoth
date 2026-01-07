@@ -8,6 +8,7 @@ from typing import (
     Iterable as _Iterable,
     List as _List,
     Mapping as _Mapping,
+    Optional as _Optional,
     Protocol as _Protocol,
     runtime_checkable as _runtime_checkable,
 )
@@ -89,7 +90,7 @@ class PsmDataset(_SemanticDatasetMixin):
         charge_column=None,
         protein_column=None,
         protein_delim=None,
-        semantics: _Mapping[str, _SemanticInfo] = None,
+        semantics: _Optional[_Mapping[str, _SemanticInfo]] = None,
     ):
         """Initialize a PsmDataset object."""
         self._data = psms
@@ -102,7 +103,7 @@ class PsmDataset(_SemanticDatasetMixin):
         self._protein_delim = protein_delim
 
         # Build default semantics
-        semantics = {**semantics}
+        semantics = {**(semantics or {})}
 
         if charge_column is not None:
             semantics[charge_column] = _CHARGE
@@ -266,7 +267,7 @@ class ConfidenceDataset(PsmDataset):
         protein_column=None,
         protein_delim=None,
         errprob_column=None,
-        semantics: _Mapping[str, _SemanticInfo] = None,
+        semantics: _Optional[_Mapping[str, _SemanticInfo]] = None,
     ):
         self._qvalue_column = qvalue_column
         self._errprob_column = errprob_column
@@ -458,7 +459,7 @@ class PsmIntensityDataset(IntensityDatasetMixin, PsmDataset):
         charge_column=None,
         protein_column=None,
         protein_delim=None,
-        semantics: _Mapping[str, _SemanticInfo] = None,
+        semantics: _Optional[_Mapping[str, _SemanticInfo]] = None,
     ):
         if _args:
             raise TypeError("Additional positional arguments are unsupported!")
@@ -527,7 +528,7 @@ class PsmIntensityConfidenceDataset(ConfidenceDataset, IntensityDatasetMixin):
         protein_delim: str = None,
         errprob_column: str = None,
         pi0: float = None,
-        semantics: _Mapping[str, _SemanticInfo] = None,
+        semantics: _Optional[_Mapping[str, _SemanticInfo]] = None,
     ):
         if _args:
             raise TypeError("Additional positional arguments are unsupported!")
