@@ -7,6 +7,7 @@ import logging
 from typing import (
     Iterable as _Iterable,
     List as _List,
+    Mapping as _Mapping,
     Protocol as _Protocol,
     runtime_checkable as _runtime_checkable,
 )
@@ -21,11 +22,16 @@ from pyspark.sql.functions import (
 )
 
 from .utils import listify
+from .semantics import (
+    SemanticDatasetMixin as _SemanticDatasetMixin,
+    SemanticInfo as _SemanticInfo,
+    CHARGE as _CHARGE,
+)
 
 LOGGER = logging.getLogger(__name__)
 
 
-class PsmDataset:
+class PsmDataset(_SemanticDatasetMixin):
     """A collection of peptide-spectrum matches (PSMs) backed by a :py:class:`pyspark.sql.DataFrame`
 
     Parameters
@@ -53,6 +59,13 @@ class PsmDataset:
     protein_delim : str (optional)
         The string delimiter that is needed to separate multiple proteins found
         in the protein column.
+    semantics : Mapping[str, SemanticInfo], optional
+        Optional mapping to specify the semantics of dataset columns.
+
+        The following columns will have default semantics assigned; if
+        they are included in this mapping, the provided value will be ignored:
+
+        - ``charge_column``
 
     Attributes
     ----------
@@ -62,6 +75,7 @@ class PsmDataset:
     peptides : pyspark.sql.DataFrame
     proteins : pyspark.sql.DataFrame
     protein_delim : str
+    semantics : Mapping[str, SemanticInfo]
     """
 
     def __init__(
@@ -75,6 +89,7 @@ class PsmDataset:
         charge_column=None,
         protein_column=None,
         protein_delim=None,
+        semantics: _Mapping[str, _SemanticInfo] = None,
     ):
         """Initialize a PsmDataset object."""
         self._data = psms
@@ -86,6 +101,15 @@ class PsmDataset:
         self._protein_column = protein_column
         self._protein_delim = protein_delim
 
+        # Build default semantics
+        semantics = {**semantics}
+
+        if charge_column is not None:
+            semantics[charge_column] = _CHARGE
+
+        # Initialize the mixin with semantics
+        _SemanticDatasetMixin.__init__(self, semantics)
+
     def with_data(self, data, **kwargs):
         """
         Return a new :py:class:`wheely.mammoth.dataset.PsmDataset` backed
@@ -95,6 +119,12 @@ class PsmDataset:
         This permits mutating the data (e.g. to filter it), or altering the semantics
         of the dataset's peptide/spectrum grouping, decoy definition, etc.
         """
+        semantics = {
+            **self.semantics,
+        }
+        if "semantics" in kwargs:
+            semantics.update(kwargs.pop("semantics"))
+
         return type(self)(
             data,
             **dict(
@@ -108,6 +138,7 @@ class PsmDataset:
                     protein_delim=self.protein_delim,
                 ),
                 **kwargs,
+                semantics=semantics,
             ),
         )
 
