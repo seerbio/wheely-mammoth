@@ -24,7 +24,7 @@ class SemanticInfo(_Protocol):
         ...
 
 
-class BasicSemantic:
+class BasicSemantic(SemanticInfo):
     """
     Basic semantic information with just a name.
 
@@ -61,7 +61,7 @@ class CVUnit:
         return f"{self.name} ({self.accession})"
 
 
-class CVSemantic:
+class CVSemantic(SemanticInfo):
     """
     Controlled vocabulary semantic information with name, accession, and optional unit.
 
@@ -97,12 +97,13 @@ PSM_QVALUE: SemanticInfo = CVSemantic(
     name="PSM-level q-value",
     accession="MS:1002354",
 )
-PRECURSOR_QVALUE: SemanticInfo = BasicSemantic(
-    "Precursor-level q-value"
-)  # TODO: add CV term when available
-PEPTIDE_QVALUE: SemanticInfo = BasicSemantic(
-    "Peptide sequence-level q-value"
-)  # TODO: add CV term when available
+
+# TODO: add CV term when available
+PRECURSOR_QVALUE: SemanticInfo = BasicSemantic("Precursor-level q-value")
+
+# TODO: add CV term when available
+PEPTIDE_QVALUE: SemanticInfo = BasicSemantic("Peptide sequence-level q-value")
+
 PROTEIN_GROUP_QVALUE: SemanticInfo = CVSemantic(
     name="protein group-level q-value",  # Note: MS CV term name uses lowercase 'p'
     accession="MS:1002373",
