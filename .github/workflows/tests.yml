@@ -16,9 +16,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # Pinned MacOS ver. b/c macos-14 (macos-latest as of 2024-08-15) defaults to Java 21;
-        # this appears to cause Spark crashes in some tests!
-        os: [ubuntu-latest, windows-latest, macos-13]
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
     - uses: actions/checkout@v2
