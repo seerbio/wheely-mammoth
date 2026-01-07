@@ -7,6 +7,7 @@ import pyspark.sql.functions as fns
 import pytest
 
 from wheely.mammoth.spectra import *
+from wheely.mammoth.semantics import CHARGE, BasicSemantic
 
 
 @pytest.fixture(
@@ -23,6 +24,12 @@ from wheely.mammoth.spectra import *
                 )
                 for k, v in kwargs.items()
             },
+        ),
+        # Semantics variant
+        lambda *args, **kwargs: PrecursorDatasetBase(
+            *args,
+            **kwargs,
+            semantics={"test_col": BasicSemantic("Test semantic")},
         ),
     ]
 )
@@ -43,6 +50,12 @@ def prec_dataset_type(request):
                 )
                 for k, v in kwargs.items()
             },
+        ),
+        # Semantics variant
+        lambda *args, **kwargs: SpectraDatasetBase(
+            *args,
+            **kwargs,
+            semantics={"test_col": BasicSemantic("Test semantic")},
         ),
     ]
 )
@@ -70,6 +83,25 @@ def test_prec_dataset_attrs(basic_crux_spark_df, prec_dataset_type):
     assert len(psms.data.select(psms.charges).columns) == 1
     assert len(psms.data.select(psms.mzs).columns) == 1
     assert len(psms.data.select(psms.rts).columns) == 1
+
+    # Check that semantics are properly initialized
+    assert hasattr(
+        psms, "semantics"
+    ), "Dataset should have 'semantics' attribute"
+    assert isinstance(psms.semantics, dict), "semantics should be a dict"
+
+    # For datasets with custom semantics in fixture:
+    if "test_col" in psms.semantics:
+        assert psms.semantics["test_col"] is not None
+        # Test get_semantics method
+        assert psms.get_semantics("test_col") == psms.semantics["test_col"]
+
+    # For PrecursorDatasetBase: verify forced charge semantics
+    if psms.charge_column is not None:
+        assert psms.charge_column in psms.semantics
+        assert psms.semantics[psms.charge_column] == CHARGE
+        # Test get_by_semantics method
+        assert psms.get_by_semantics(CHARGE) == psms.charge_column
 
     assert all(c is not None for c in psms.columns)
     assert set(psms.columns) == {
@@ -104,6 +136,24 @@ def test_spec_dataset_attrs(basic_crux_spark_df, spec_dataset_type):
     assert len(psms.data.select(psms.mzs).columns) == 1
     assert len(psms.data.select(psms.rts).columns) == 1
     assert len(psms.data.select(psms.peaklists).columns) == 1
+
+    # Check that semantics are properly initialized
+    assert hasattr(
+        psms, "semantics"
+    ), "Dataset should have 'semantics' attribute"
+    assert isinstance(psms.semantics, dict), "semantics should be a dict"
+
+    # For datasets with custom semantics in fixture:
+    if "test_col" in psms.semantics:
+        assert psms.semantics["test_col"] is not None
+        # Test get_semantics method
+        assert psms.get_semantics("test_col") == psms.semantics["test_col"]
+
+    # For SpectraDatasetBase: verify forced charge semantics
+    if psms.charge_column is not None:
+        assert psms.charge_column in psms.semantics
+        assert psms.semantics[psms.charge_column] == CHARGE
+        assert psms.get_by_semantics(CHARGE) == psms.charge_column
 
     assert all(c is not None for c in psms.columns)
     assert set(psms.columns) == {
