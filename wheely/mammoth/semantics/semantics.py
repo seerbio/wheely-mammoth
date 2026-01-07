@@ -93,6 +93,19 @@ class CVSemantic(SemanticInfo):
         return f"{self.name} ({self.accession})"
 
 
+class UnknownSemantic(SemanticInfo):
+    """
+    Semantic information for unknown semantics.
+    Not equal to any other semantic info, including other UnknownSemantic instances.
+    """
+
+    def __eq__(self, other):
+        return False
+
+    def __repr__(self):
+        return "<unknown>"
+
+
 PSM_QVALUE: SemanticInfo = CVSemantic(
     name="PSM-level q-value",
     accession="MS:1002354",
@@ -109,6 +122,11 @@ PROTEIN_GROUP_QVALUE: SemanticInfo = CVSemantic(
     accession="MS:1002373",
 )
 
+# TODO: add CV term if/when available
+PSM_PRECURSOR_QVALUE: SemanticInfo = BasicSemantic(
+    "Combined PSM- and precursor-level q-value"
+)
+
 CHARGE: SemanticInfo = CVSemantic(
     name="charge state",
     accession="MS:1000041",
@@ -119,3 +137,5 @@ RT_IN_SECONDS: SemanticInfo = CVSemantic(
     accession="MS:1000016",
     unit=CVUnit(name="second", accession="UO:0000010"),
 )
+
+UNKNOWN: SemanticInfo = UnknownSemantic()
