@@ -129,6 +129,11 @@ PSM_PRECURSOR_QVALUE: SemanticInfo = BasicSemantic(
     "Combined PSM- and precursor-level q-value"
 )
 
+# TODO: add CV term if/when available
+PSM_PEPTIDE_QVALUE: SemanticInfo = BasicSemantic(
+    "Combined PSM- and peptide sequence-level q-value"
+)
+
 CHARGE: SemanticInfo = CVSemantic(
     name="charge state",
     accession="MS:1000041",
