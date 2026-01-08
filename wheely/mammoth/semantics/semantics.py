@@ -124,9 +124,26 @@ PROTEIN_GROUP_QVALUE: SemanticInfo = CVSemantic(
     accession="MS:1002373",
 )
 
-# TODO: add CV term if/when available
+# TODO: add CV terms if/when available
 PSM_PRECURSOR_QVALUE: SemanticInfo = BasicSemantic(
     "Combined PSM- and precursor-level q-value"
+)
+PSM_PEPTIDE_QVALUE: SemanticInfo = BasicSemantic(
+    "Combined PSM- and peptide sequence-level q-value"
+)
+
+# TODO: add CV terms if/when available
+PSM_ERRPROB: SemanticInfo = BasicSemantic(
+    "PSM-level posterior error probability"
+)
+PRECURSOR_ERRPROB: SemanticInfo = BasicSemantic(
+    "Precursor-level posterior error probability"
+)
+PEPTIDE_ERRPROB: SemanticInfo = BasicSemantic(
+    "Peptide sequence-level posterior error probability"
+)
+PROTEIN_GROUP_ERRPROB: SemanticInfo = BasicSemantic(
+    "Protein group-level posterior error probability"
 )
 
 CHARGE: SemanticInfo = CVSemantic(
