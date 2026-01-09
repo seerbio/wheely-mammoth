@@ -102,6 +102,14 @@ PROTEIN_GROUP_ERRPROB: SemanticInfo = BasicSemantic(
 )
 
 
+##### QUANTIFICATION #####
+
+XIC_AREA: SemanticInfo = CVSemantic("XIC area", "MS:1001858")
+NORMALIZED_XIC_AREA: SemanticInfo = CVSemantic(
+    "normalized XIC area", "MS:1001859"
+)
+
+
 ##### UNKNOWN #####
 
 UNKNOWN: SemanticInfo = UnknownSemantic()
