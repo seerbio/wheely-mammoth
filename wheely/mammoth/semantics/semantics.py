@@ -2,7 +2,7 @@
 Objects that define column semantics.
 """
 
-from . import (
+from .semanticinfo import (
     SemanticInfo,
     BasicSemantic,
     CVSemantic,
