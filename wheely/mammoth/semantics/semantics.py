@@ -146,15 +146,42 @@ PROTEIN_GROUP_ERRPROB: SemanticInfo = BasicSemantic(
     "Protein group-level posterior error probability"
 )
 
+THEORETICAL_MONO_MASS: SemanticInfo = CVSemantic(
+    name="theoretical neutral monoisotopic mass",
+    accession="MS:1003637",
+    unit=CVUnit(name="Dalton", accession="UO:0000221"),
+)
+
 CHARGE: SemanticInfo = CVSemantic(
     name="charge state",
     accession="MS:1000041",
+)
+
+# TODO: add CV term if/when available
+THEORETICAL_PRECURSOR_MZ: SemanticInfo = BasicSemantic(
+    "theoretical precursor m/z"
 )
 
 RT_IN_SECONDS: SemanticInfo = CVSemantic(
     name="scan start time",
     accession="MS:1000016",
     unit=CVUnit(name="second", accession="UO:0000010"),
+)
+NORMALIZED_RT_IN_SECONDS: SemanticInfo = CVSemantic(
+    name="normalized retention time",
+    accession="MS:1000896",
+    unit=CVUnit(name="second", accession="UO:0000010"),
+)
+
+# TODO: add CV terms if/when available
+RT_START_IN_SECONDS: SemanticInfo = BasicSemantic(
+    "retention time window start"
+)
+RT_STOP_IN_SECONDS: SemanticInfo = BasicSemantic("retention time window stop")
+
+SCAN_NUMBER: SemanticInfo = CVSemantic(
+    name="scan number",
+    accession="MS:1003057",
 )
 
 UNKNOWN: SemanticInfo = UnknownSemantic()
