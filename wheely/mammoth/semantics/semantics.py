@@ -11,17 +11,38 @@ from .semanticinfo import (
 )
 
 
-##### PRECURSOR PROPERTIES #####
+##### PEPTIDE PROPERTIES #####
 
-CHARGE: SemanticInfo = CVSemantic(
-    name="charge state",
-    accession="MS:1000041",
+PEPTIDOFORM_SEQUENCE: SemanticInfo = CVSemantic(
+    name="peptidoform sequence",
+    accession="MS:1000889",
+)
+
+STRIPPED_SEQUENCE: SemanticInfo = CVSemantic(
+    name="stripped peptide sequence",
+    accession="MS:1000888",
 )
 
 THEORETICAL_MONO_MASS: SemanticInfo = CVSemantic(
     name="theoretical neutral monoisotopic mass",
     accession="MS:1003637",
     unit=CVUnit(name="Dalton", accession="UO:0000221"),
+)
+
+RAZOR_PEPTIDE: SemanticInfo = CVSemantic(
+    name="razor peptide",
+    accession="MS:1003015",
+)
+
+# TODO: add CV term if/when available
+PROTEOTYPIC_PEPTIDE: SemanticInfo = BasicSemantic("proteotypic peptide")
+
+
+##### PRECURSOR PROPERTIES #####
+
+CHARGE: SemanticInfo = CVSemantic(
+    name="charge state",
+    accession="MS:1000041",
 )
 
 # TODO: add CV term if/when available
@@ -99,6 +120,14 @@ PEPTIDE_ERRPROB: SemanticInfo = BasicSemantic(
 )
 PROTEIN_GROUP_ERRPROB: SemanticInfo = BasicSemantic(
     "Protein group-level posterior error probability"
+)
+
+
+##### QUANTIFICATION #####
+
+XIC_AREA: SemanticInfo = CVSemantic("XIC area", "MS:1001858")
+NORMALIZED_XIC_AREA: SemanticInfo = CVSemantic(
+    "normalized XIC area", "MS:1001859"
 )
 
 
