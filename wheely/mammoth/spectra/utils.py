@@ -1,5 +1,5 @@
 """
-`scry.output.library.spectra.utils` -- utility methods for handling spectral library peaklists
+`wheely.mammoth.spectra.utils` -- utility methods for handling spectral library peaklists
 """
 
 from typing import (
