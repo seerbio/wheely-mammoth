@@ -3,6 +3,7 @@ protein identifications.
 """
 
 from typing import (
+    Iterable as _Iterable,
     List as _List,
     Mapping as _Mapping,
     Optional as _Optional,
@@ -288,6 +289,7 @@ class ProteinIntensityDataset(ProteinDataset, _IntensityDatasetMixin):
         *_args,
         sample_column: str,
         intensity_column: str,
+        intensity_columns: _Iterable[str] = None,
         protein_column: str,
         target_column: str,
         score_columns: _List[str],
@@ -310,6 +312,7 @@ class ProteinIntensityDataset(ProteinDataset, _IntensityDatasetMixin):
             self,
             sample_column=sample_column,
             intensity_column=intensity_column,
+            intensity_columns=intensity_columns,
         )
 
     @property
@@ -320,7 +323,7 @@ class ProteinIntensityDataset(ProteinDataset, _IntensityDatasetMixin):
         return [
             *super().columns,
             self.sample_column,
-            self.intensity_column,
+            *self.intensity_columns,
         ]
 
     def with_data(self, data, **kwargs):
@@ -330,6 +333,7 @@ class ProteinIntensityDataset(ProteinDataset, _IntensityDatasetMixin):
                 dict(
                     sample_column=self.sample_column,
                     intensity_column=self.intensity_column,
+                    intensity_columns=self.intensity_columns,
                 ),
                 **kwargs,
             ),
@@ -349,6 +353,7 @@ class ProteinIntensityConfidenceDataset(
         *_args,
         sample_column: str,
         intensity_column: str,
+        intensity_columns: _Iterable[str] = None,
         protein_column: str,
         target_column: str,
         score_columns: _List[str],
@@ -377,6 +382,7 @@ class ProteinIntensityConfidenceDataset(
             self,
             sample_column=sample_column,
             intensity_column=intensity_column,
+            intensity_columns=intensity_columns,
         )
 
     @property
@@ -387,7 +393,7 @@ class ProteinIntensityConfidenceDataset(
         return [
             *super().columns,
             self.sample_column,
-            self.intensity_column,
+            *self.intensity_columns,
         ]
 
     def with_data(self, data, **kwargs):
@@ -397,6 +403,7 @@ class ProteinIntensityConfidenceDataset(
                 dict(
                     sample_column=self.sample_column,
                     intensity_column=self.intensity_column,
+                    intensity_columns=self.intensity_columns,
                 ),
                 **kwargs,
             ),
