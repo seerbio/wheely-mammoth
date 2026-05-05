@@ -10,7 +10,6 @@ from .semanticinfo import (
     UnknownSemantic,
 )
 
-
 ##### PEPTIDE PROPERTIES #####
 
 PEPTIDOFORM_SEQUENCE: SemanticInfo = CVSemantic(

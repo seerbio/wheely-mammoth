@@ -75,7 +75,7 @@ def peaklist_to_intens(peaklist_col: _Union[str, _Column]) -> _Column:
 
 
 def peaklist_to_lists(
-    peaklist_col: _Union[str, _Column]
+    peaklist_col: _Union[str, _Column],
 ) -> _Tuple[_Column, _Column]:
     """
     Convert a single "peaklist" column into a single column containing pairs of M/Z and intensity arrays.
