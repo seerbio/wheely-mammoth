@@ -29,7 +29,6 @@ jobs:
       run: |
         python -m build --sdist --wheel .
         twine upload --repository codeartifact dist/*
-          deploy-pkg:
 
   pypi-deploy:
     name: Upload release to PyPI
