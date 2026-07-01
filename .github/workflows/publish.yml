@@ -8,27 +8,27 @@ on:
     types: [created]
 
 jobs:
-  codeartifact-deploy:
-    name: Upload release to CodeArtifact
-    if: ${{ github.event_name == 'release' }}
-    runs-on: [self-hosted, aws-master, X64]
+  #codeartifact-deploy:
+  #  name: Upload release to CodeArtifact
+  #  if: ${{ github.event_name == 'release' }}
+  #  runs-on: [self-hosted, aws-master, X64]
 
-    steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
-    - name: Install dependencies
-      run: |
-        pip config unset global.index-url || true
-        python -m pip install --upgrade pip
-        pip install setuptools wheel twine build 'awscli>=1.18.83'
-        aws codeartifact login --tool twine --repository seer_ds --domain seer --domain-owner 718843040700 --region us-west-2
-    - name: Build and publish
-      run: |
-        python -m build --sdist --wheel .
-        twine upload --repository codeartifact dist/*
+  #  steps:
+  #  - uses: actions/checkout@v2
+  #  - name: Set up Python
+  #    uses: actions/setup-python@v2
+  #    with:
+  #      python-version: '3.x'
+  #  - name: Install dependencies
+  #    run: |
+  #      pip config unset global.index-url || true
+  #      python -m pip install --upgrade pip
+  #      pip install setuptools wheel twine build 'awscli>=1.18.83'
+  #      aws codeartifact login --tool twine --repository seer_ds --domain seer --domain-owner 718843040700 --region us-west-2
+  #  - name: Build and publish
+  #    run: |
+  #      python -m build --sdist --wheel .
+  #      twine upload --repository codeartifact dist/*
 
   pypi-deploy:
     name: Upload release to PyPI
