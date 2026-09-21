@@ -3,6 +3,11 @@
 """
 
 from .dataset import (
+    IonMobilityDataset,
+    IonMobilityDatasetBase,
+    IonMobilityDatasetMixin,
+    IonMobilitySpectraDataset,
+    IonMobilitySpectraDatasetBase,
     PrecursorDataset,
     PrecursorDatasetBase,
     SpectraDataset,
