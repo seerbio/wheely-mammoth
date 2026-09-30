@@ -196,6 +196,93 @@ class PrecursorDatasetBase(PrecursorDataset, _SemanticDatasetMixin):
 
 
 @_runtime_checkable
+class IonMobilityDataset(PrecursorDataset, _Protocol):
+    """
+    A collection of precursor information that includes an ion mobility
+    dimension, backed by a :py:class:`pyspark.sql.DataFrame`.
+
+    To easily implement this protocol, extend `IonMobilityDatasetBase`.
+
+    Attributes
+    ----------
+    ion_mobilities : pyspark.sql.Column
+    ion_mobility_column : str
+    """
+
+    ion_mobilities: _Column
+    ion_mobility_column: str
+
+
+class IonMobilityDatasetMixin:
+    def __init__(self, ion_mobility_column):
+        """
+        Parameters
+        ----------
+        ion_mobility_column : str
+            The name of a column giving the ion mobility of the precursor.
+        """
+        self._ion_mobility_column = ion_mobility_column
+
+    @property
+    def ion_mobilities(self):
+        """The ion mobilities as a :py:class:`pyspark.sql.Column`."""
+        return _col(self.ion_mobility_column)
+
+    @property
+    def ion_mobility_column(self):
+        """The name of the column giving ion mobility information."""
+        return self._ion_mobility_column
+
+
+class IonMobilityDatasetBase(
+    IonMobilityDatasetMixin, PrecursorDatasetBase, IonMobilityDataset
+):
+    def __init__(
+        self,
+        psms: _DataFrame,
+        spectrum_columns,
+        charge_column,
+        mz_column,
+        rt_column,
+        ion_mobility_column,
+        semantics: _Optional[_Mapping[str, _SemanticInfo]] = None,
+    ):
+        PrecursorDatasetBase.__init__(
+            self,
+            psms,
+            spectrum_columns,
+            charge_column,
+            mz_column,
+            rt_column,
+            semantics=semantics,
+        )
+        IonMobilityDatasetMixin.__init__(self, ion_mobility_column)
+
+    def with_data(self, data, **kwargs):
+        """
+        Return a new :py:class:`IonMobilityDatasetBase` backed by `data` but
+        otherwise identical to this dataset.
+        """
+        return super().with_data(
+            data,
+            **dict(
+                dict(
+                    ion_mobility_column=self.ion_mobility_column,
+                ),
+                **kwargs,
+            ),
+        )
+
+    @property
+    def columns(self):
+        """
+        The columns of the :py:class:`pyspark.sql.DataFrame` that have defined
+        semantics in this dataset.
+        """
+        return [*super().columns, self.ion_mobility_column]
+
+
+@_runtime_checkable
 class SpectraDataset(_Protocol):
     """
     A collection of spectral information backed by a :py:class:`pyspark.sql.DataFrame`
@@ -322,6 +409,66 @@ class SpectraDatasetBase(
             self.rt_column,
             self.peaklist_column,
         ]
+
+
+@_runtime_checkable
+class IonMobilitySpectraDataset(IonMobilityDataset, SpectraDataset, _Protocol):
+    """
+    A collection of spectral information that includes an ion mobility
+    dimension, backed by a :py:class:`pyspark.sql.DataFrame`.
+
+    To easily implement this protocol, extend `IonMobilitySpectraDatasetBase`.
+    """
+
+
+class IonMobilitySpectraDatasetBase(
+    SpectraDatasetMixin, IonMobilityDatasetBase, IonMobilitySpectraDataset
+):
+    def __init__(
+        self,
+        psms: _DataFrame,
+        spectrum_columns,
+        charge_column,
+        mz_column,
+        rt_column,
+        peaklist_column,
+        ion_mobility_column,
+        semantics: _Optional[_Mapping[str, _SemanticInfo]] = None,
+    ):
+        IonMobilityDatasetBase.__init__(
+            self,
+            psms,
+            spectrum_columns,
+            charge_column,
+            mz_column,
+            rt_column,
+            ion_mobility_column,
+            semantics=semantics,
+        )
+        SpectraDatasetMixin.__init__(self, peaklist_column)
+
+    def with_data(self, data, **kwargs):
+        """
+        Return a new :py:class:`IonMobilitySpectraDatasetBase` backed by
+        `data` but otherwise identical to this dataset.
+        """
+        return super().with_data(
+            data,
+            **dict(
+                dict(
+                    peaklist_column=self.peaklist_column,
+                ),
+                **kwargs,
+            ),
+        )
+
+    @property
+    def columns(self):
+        """
+        The columns of the :py:class:`pyspark.sql.DataFrame` that have defined
+        semantics in this dataset.
+        """
+        return [*super().columns, self.peaklist_column]
 
 
 PeaklistType = _types.ArrayType(
